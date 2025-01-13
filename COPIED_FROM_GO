@@ -1,4 +1,4 @@
-Parts of the code in parser/xml and parser/json have been copied from the go standard library
+Parts of the code in the xml folder have been copied from the go standard library
 
 Copyright (c) 2012 The Go Authors. All rights reserved.
 

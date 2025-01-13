@@ -1,6 +1,4 @@
-## parser-go
+## parser-go-xml
 
-Parser interface for Go.
-
-This includes tools for developing implementations of the parser interface, for example the `debug` package.
+Parser for XML in Go
 
