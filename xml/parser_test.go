@@ -26,12 +26,15 @@ func testXML(t *testing.T, s string) {
 	if err := x.Init([]byte(s)); err != nil {
 		t.Fatal(err)
 	}
-	m := debug.Walk(debug.NewLogger(x, debug.NewLineLogger()))
+	m, err := debug.Parse(debug.NewLogger(x, debug.NewLineLogger()))
+	if err != nil {
+		t.Fatal(err)
+	}
 	data, err := json.Marshal(m)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf(string(data))
+	t.Log(string(data))
 }
 
 func TestExample(t *testing.T) {
