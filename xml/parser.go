@@ -101,12 +101,10 @@ func (p *xmlParser) Next() (err error) {
 			return io.EOF
 		}
 	}
-	if p.tok == nil {
-		if p.attrs != nil {
-			p.attrIndex++
-			if p.attrIndex < len(p.attrs) {
-				return nil
-			}
+	if p.tok == nil && p.attrs != nil {
+		p.attrIndex++
+		if p.attrIndex < len(p.attrs) {
+			return nil
 		}
 	}
 	if p.tok != nil {

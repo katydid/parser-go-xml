@@ -15,30 +15,33 @@
 package xml
 
 import (
-	"encoding/xml"
 	"io"
+	"testing"
 )
 
-func hasContent(c xml.CharData) bool {
-	return len(string(c)) > 0
+func expectNoErr(t *testing.T, f func() error) {
+	t.Helper()
+	err := f()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
-func scan(dec *xml.Decoder) (xml.Token, error) {
-	tok, err := dec.Token()
-	for {
-		if err != nil {
-			return tok, err
-		}
-		switch t := tok.(type) {
-		case xml.StartElement:
-			return tok, nil
-		case xml.CharData:
-			if hasContent(t) {
-				return tok, nil
-			}
-		case xml.EndElement:
-			return tok, io.EOF
-		}
-		tok, err = dec.Token()
+func expect[A comparable](t *testing.T, f func() (A, error), want A) {
+	t.Helper()
+	got, err := f()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != want {
+		t.Fatalf("want %#v, but got %#v", want, got)
+	}
+}
+
+func expectEOF(t *testing.T, f func() error) {
+	t.Helper()
+	err := f()
+	if err != io.EOF {
+		t.Fatalf("expected EOF, but got err = %v", err)
 	}
 }
