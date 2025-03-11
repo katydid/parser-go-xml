@@ -28,16 +28,18 @@ import (
 )
 
 type xmlParser struct {
-	buf        []byte
-	dec        *xml.Decoder
-	tok        xml.Token
-	attrs      []xml.Attr
-	attrIndex  int
-	attrValue  bool
-	attrFirst  bool
+	dec *xml.Decoder
+
+	// options
 	attrPrefix string
 	elemPrefix string
 	textPrefix string
+
+	tok       xml.Token
+	attrs     []xml.Attr
+	attrIndex int
+	attrValue bool
+	attrFirst bool
 }
 
 // XMLParser is an xml parser.
@@ -45,7 +47,6 @@ type XMLParser interface {
 	parser.Interface
 	//Init intialises the parser with a byte buffer containing xml.
 	Init([]byte) error
-	Reset() error
 }
 
 // NewXMLParser returns a new xml parser.
@@ -86,14 +87,9 @@ var procInstPattern = regexp.MustCompile(`<\?.*\?>`)
 func (p *xmlParser) Init(buf []byte) error {
 	buf = procInstPattern.ReplaceAll(buf, []byte{})
 	buf = bytes.TrimSpace(buf)
-	p.buf = buf
 	p.dec = xml.NewDecoder(bytes.NewBuffer(buf))
 	p.dec.Strict = false
 	return nil
-}
-
-func (s *xmlParser) Reset() error {
-	return s.Init(s.buf)
 }
 
 func hasContent(c xml.CharData) bool {
@@ -120,9 +116,7 @@ func (p *xmlParser) Next() (err error) {
 	if p.tok != nil {
 		for {
 			if _, ok := p.tok.(xml.StartElement); ok {
-				//fmt.Printf("Skipping %s\n", s.Name)
 				if err := p.dec.Skip(); err != nil {
-					//fmt.Printf("Skip err = %v\n", err)
 					return err
 				}
 				break
@@ -134,7 +128,6 @@ func (p *xmlParser) Next() (err error) {
 				}
 			} else if _, ok := p.tok.(xml.Comment); ok {
 				p.tok, err = p.dec.Token()
-				//fmt.Printf("Comment Next Token %#v, err = %v\n", p.tok, err)
 				if err != nil {
 					return err
 				}
@@ -144,7 +137,6 @@ func (p *xmlParser) Next() (err error) {
 		}
 	}
 	p.tok, err = p.dec.Token()
-	//fmt.Printf("Next Token %#v, err %v\n", p.tok, err)
 	for err == nil {
 		if _, ok := p.tok.(xml.StartElement); ok {
 			break
@@ -156,7 +148,6 @@ func (p *xmlParser) Next() (err error) {
 			return io.EOF
 		}
 		p.tok, err = p.dec.Token()
-		//fmt.Printf("Next Next Token %#v, err = %v\n", p.tok, err)
 	}
 	return err
 }
@@ -169,7 +160,6 @@ func (p *xmlParser) IsLeaf() bool {
 		return false
 	}
 	_, ok := p.tok.(xml.CharData)
-	//fmt.Printf("IsLeaf %#v\n", p.tok)
 	return ok
 }
 
