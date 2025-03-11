@@ -20,10 +20,8 @@ checklicense:
 	go get github.com/awalterschulze/checklicense
 	checklicense . \
 	doc.go \
-	tools/tools.go \
 	.svg \
-	.txt \
-	COPIED_FROM_GO
+	.txt
 
 test:
 	go test ./...
