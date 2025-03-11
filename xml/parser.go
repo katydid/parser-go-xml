@@ -92,10 +92,6 @@ func (p *xmlParser) Init(buf []byte) error {
 	return nil
 }
 
-func hasContent(c xml.CharData) bool {
-	return len(string(c)) > 0
-}
-
 func (p *xmlParser) Next() (err error) {
 	if p.attrValue {
 		if p.attrFirst {
@@ -120,35 +116,16 @@ func (p *xmlParser) Next() (err error) {
 					return err
 				}
 				break
-			} else if _, ok := p.tok.(xml.EndElement); ok {
-				return io.EOF
 			} else if c, ok := p.tok.(xml.CharData); ok {
 				if hasContent(c) {
 					break
-				}
-			} else if _, ok := p.tok.(xml.Comment); ok {
-				p.tok, err = p.dec.Token()
-				if err != nil {
-					return err
 				}
 			} else {
 				panic(fmt.Sprintf("unknown token %T", p.tok))
 			}
 		}
 	}
-	p.tok, err = p.dec.Token()
-	for err == nil {
-		if _, ok := p.tok.(xml.StartElement); ok {
-			break
-		} else if c, ok := p.tok.(xml.CharData); ok {
-			if hasContent(c) {
-				break
-			}
-		} else if _, ok := p.tok.(xml.EndElement); ok {
-			return io.EOF
-		}
-		p.tok, err = p.dec.Token()
-	}
+	p.tok, err = scan(p.dec)
 	return err
 }
 
