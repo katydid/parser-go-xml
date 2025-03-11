@@ -22,10 +22,7 @@ import (
 )
 
 func testXML(t *testing.T, s string) {
-	x := NewXMLParser()
-	if err := x.Init([]byte(s)); err != nil {
-		t.Fatal(err)
-	}
+	x := newParser(t, s)
 	m, err := debug.Parse(debug.NewLogger(x, debug.NewLineLogger()))
 	if err != nil {
 		t.Fatal(err)
@@ -35,6 +32,15 @@ func testXML(t *testing.T, s string) {
 		t.Fatal(err)
 	}
 	t.Log(string(data))
+}
+
+func newParser(t *testing.T, s string) XMLParser {
+	t.Helper()
+	x := NewXMLParser()
+	if err := x.Init([]byte(s)); err != nil {
+		t.Fatal(err)
+	}
+	return x
 }
 
 func TestExample(t *testing.T) {
@@ -61,8 +67,12 @@ func TestPudding(t *testing.T) {
 	testXML(t, pudding)
 }
 
-func TestPerson(t *testing.T) {
-	person := `<Person>
+func TestAB(t *testing.T) {
+	testXML(t, `<A>B</A>`)
+}
+
+func TestPersonWalk(t *testing.T) {
+	personStr := `<Person>
 		<Name>Robert</Name>
 		<Addresses>
 				<Number>456</Number>
@@ -71,9 +81,54 @@ func TestPerson(t *testing.T) {
 		<Telephone>0127897897</Telephone>
 		<XXX_unrecognized/>
 	</Person>`
-	testXML(t, person)
+	testXML(t, personStr)
+	// [{"Label":"Person","Children":[{"Label":"\n\t\t","Children":null},{"Label":"Name","Children":[{"Label":"Robert","Children":null}]},{"Label":"\n\t\t","Children":null},{"Label":"Addresses","Children":[{"Label":"\n\t\t\t\t","Children":null},{"Label":"Number","Children":[{"Label":"456","Children":null}]},{"Label":"\n\t\t\t\t","Children":null},{"Label":"Street","Children":[{"Label":"TheStreet","Children":null}]},{"Label":"\n\t\t","Children":null}]},{"Label":"\n\t\t","Children":null},{"Label":"Telephone","Children":[{"Label":"127897897","Children":null}]},{"Label":"\n\t\t","Children":null},{"Label":"XXX_unrecognized","Children":[]},{"Label":"\n\t","Children":null}]}]
 }
 
-func TestAB(t *testing.T) {
-	testXML(t, `<A>B</A>`)
+func TestPersonManual(t *testing.T) {
+	personStr := `<Person>
+	<Name>Robert</Name>
+	<Addresses>
+		<Number>456</Number>
+		<Street>TheStreet</Street>
+	</Addresses>
+	<Telephone>0127897897</Telephone>
+	<XXX_unrecognized/>
+</Person>`
+	x := newParser(t, personStr)
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Person")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n\t")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Name")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Robert")
+	expectEOF(t, x.Next)
+	x.Up()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n\t")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Addresses")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n\t")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Telephone")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "0127897897")
+	expectEOF(t, x.Next)
+	x.Up()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n\t")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "XXX_unrecognized")
+	x.Down()
+	expectEOF(t, x.Next)
+	x.Up()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n")
+	expectEOF(t, x.Next)
 }
