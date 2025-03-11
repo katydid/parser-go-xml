@@ -17,6 +17,7 @@ package xml
 
 import (
 	"bytes"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"regexp"
@@ -28,9 +29,9 @@ import (
 
 type xmlParser struct {
 	buf        []byte
-	dec        *Decoder
-	tok        Token
-	attrs      []Attr
+	dec        *xml.Decoder
+	tok        xml.Token
+	attrs      []xml.Attr
 	attrIndex  int
 	attrValue  bool
 	attrFirst  bool
@@ -86,7 +87,7 @@ func (p *xmlParser) Init(buf []byte) error {
 	buf = procInstPattern.ReplaceAll(buf, []byte{})
 	buf = bytes.TrimSpace(buf)
 	p.buf = buf
-	p.dec = NewDecoder(bytes.NewBuffer(buf))
+	p.dec = xml.NewDecoder(bytes.NewBuffer(buf))
 	p.dec.Strict = false
 	return nil
 }
@@ -95,7 +96,7 @@ func (s *xmlParser) Reset() error {
 	return s.Init(s.buf)
 }
 
-func hasContent(c CharData) bool {
+func hasContent(c xml.CharData) bool {
 	return len(string(c)) > 0
 }
 
@@ -118,20 +119,20 @@ func (p *xmlParser) Next() (err error) {
 	}
 	if p.tok != nil {
 		for {
-			if _, ok := p.tok.(StartElement); ok {
+			if _, ok := p.tok.(xml.StartElement); ok {
 				//fmt.Printf("Skipping %s\n", s.Name)
 				if err := p.dec.Skip(); err != nil {
 					//fmt.Printf("Skip err = %v\n", err)
 					return err
 				}
 				break
-			} else if _, ok := p.tok.(EndElement); ok {
+			} else if _, ok := p.tok.(xml.EndElement); ok {
 				return io.EOF
-			} else if c, ok := p.tok.(CharData); ok {
+			} else if c, ok := p.tok.(xml.CharData); ok {
 				if hasContent(c) {
 					break
 				}
-			} else if _, ok := p.tok.(Comment); ok {
+			} else if _, ok := p.tok.(xml.Comment); ok {
 				p.tok, err = p.dec.Token()
 				//fmt.Printf("Comment Next Token %#v, err = %v\n", p.tok, err)
 				if err != nil {
@@ -145,13 +146,13 @@ func (p *xmlParser) Next() (err error) {
 	p.tok, err = p.dec.Token()
 	//fmt.Printf("Next Token %#v, err %v\n", p.tok, err)
 	for err == nil {
-		if _, ok := p.tok.(StartElement); ok {
+		if _, ok := p.tok.(xml.StartElement); ok {
 			break
-		} else if c, ok := p.tok.(CharData); ok {
+		} else if c, ok := p.tok.(xml.CharData); ok {
 			if hasContent(c) {
 				break
 			}
-		} else if _, ok := p.tok.(EndElement); ok {
+		} else if _, ok := p.tok.(xml.EndElement); ok {
 			return io.EOF
 		}
 		p.tok, err = p.dec.Token()
@@ -167,7 +168,7 @@ func (p *xmlParser) IsLeaf() bool {
 		}
 		return false
 	}
-	_, ok := p.tok.(CharData)
+	_, ok := p.tok.(xml.CharData)
 	//fmt.Printf("IsLeaf %#v\n", p.tok)
 	return ok
 }
@@ -176,7 +177,7 @@ func (p *xmlParser) getValue() string {
 	if p.tok == nil && p.attrValue {
 		return p.attrs[p.attrIndex].Value
 	}
-	if c, ok := p.tok.(CharData); ok {
+	if c, ok := p.tok.(xml.CharData); ok {
 		return string(c)
 	}
 	return ""
@@ -208,17 +209,17 @@ func (p *xmlParser) String() (string, error) {
 			return p.attrPrefix + p.attrs[p.attrIndex].Name.Local, nil
 		}
 	}
-	if s, ok := p.tok.(StartElement); ok {
+	if s, ok := p.tok.(xml.StartElement); ok {
 		return p.elemPrefix + s.Name.Local, nil
 	}
-	if c, ok := p.tok.(CharData); ok {
+	if c, ok := p.tok.(xml.CharData); ok {
 		return p.textPrefix + string(c), nil
 	}
 	return "", parser.ErrNotString
 }
 
 func (p *xmlParser) Bytes() ([]byte, error) {
-	if c, ok := p.tok.(CharData); ok {
+	if c, ok := p.tok.(xml.CharData); ok {
 		return []byte(c), nil
 	}
 	return nil, parser.ErrNotBytes
@@ -232,7 +233,7 @@ func (p *xmlParser) Up() {
 			return
 		}
 	}
-	if _, ok := p.tok.(EndElement); ok {
+	if _, ok := p.tok.(xml.EndElement); ok {
 		p.tok = nil
 		p.attrs = nil
 		p.attrIndex = 0
@@ -253,7 +254,7 @@ func (p *xmlParser) Down() {
 			return
 		}
 	}
-	if s, ok := p.tok.(StartElement); ok {
+	if s, ok := p.tok.(xml.StartElement); ok {
 		p.tok = nil
 		p.attrs = s.Attr
 		p.attrIndex = -1
