@@ -132,3 +132,28 @@ func TestPersonManual(t *testing.T) {
 	expect(t, x.String, "\n")
 	expectEOF(t, x.Next)
 }
+
+func TestAttrManual(t *testing.T) {
+	personStr := `<Person name="Robert"><Address number=456 street="TheStreet"/></Person>`
+	x := newParser(t, personStr)
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Person")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "name")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Address")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "number")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "street")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "TheStreet")
+	expectEOF(t, x.Next)
+	x.Up()
+	expectEOF(t, x.Next)
+	x.Up()
+	expectEOF(t, x.Next)
+}
