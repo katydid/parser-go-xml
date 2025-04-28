@@ -16,11 +16,9 @@
 package xml
 
 import (
-	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -28,7 +26,7 @@ import (
 )
 
 type xmlParser struct {
-	dec *xml.Decoder
+	dec decoder
 
 	// options
 	attrPrefix string
@@ -50,45 +48,17 @@ type XMLParser interface {
 }
 
 // NewXMLParser returns a new xml parser.
-func NewXMLParser(options ...Option) XMLParser {
+func NewXMLParser(opts ...Option) XMLParser {
+	options := newOptions(opts...)
 	x := &xmlParser{}
-	for _, option := range options {
-		option(x)
-	}
+	x.attrPrefix = options.attrPrefix
+	x.elemPrefix = options.elemPrefix
+	x.textPrefix = options.textPrefix
 	return x
 }
 
-// Option is used set options when creating a new XMLParser
-type Option func(x *xmlParser)
-
-// WithAttrPrefix specifies the prefix which will be added to attributes returned by the parser.
-func WithAttrPrefix(a string) func(x *xmlParser) {
-	return func(x *xmlParser) {
-		x.attrPrefix = a
-	}
-}
-
-// WithElemPrefix specifies the prefix which will be added to elements returned by the parser.
-func WithElemPrefix(e string) func(x *xmlParser) {
-	return func(x *xmlParser) {
-		x.elemPrefix = e
-	}
-}
-
-// WithTextPrefix specifies the prefix which will be added to text returned by the parser.
-func WithTextPrefix(e string) func(x *xmlParser) {
-	return func(x *xmlParser) {
-		x.textPrefix = e
-	}
-}
-
-var procInstPattern = regexp.MustCompile(`<\?.*\?>`)
-
 func (p *xmlParser) Init(buf []byte) error {
-	buf = procInstPattern.ReplaceAll(buf, []byte{})
-	buf = bytes.TrimSpace(buf)
-	p.dec = xml.NewDecoder(bytes.NewBuffer(buf))
-	p.dec.Strict = false
+	p.dec = newDecoder(buf)
 	return nil
 }
 
@@ -123,16 +93,13 @@ func (p *xmlParser) Next() (err error) {
 			}
 		}
 	}
-	p.tok, err = scan(p.dec)
+	p.tok, err = p.dec.Token()
 	return err
 }
 
 func (p *xmlParser) IsLeaf() bool {
 	if p.tok == nil {
-		if p.attrValue {
-			return true
-		}
-		return false
+		return p.attrValue
 	}
 	_, ok := p.tok.(xml.CharData)
 	return ok
