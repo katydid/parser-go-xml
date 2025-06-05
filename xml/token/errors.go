@@ -12,31 +12,20 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package scan
+package token
 
 import (
-	"io"
-	"testing"
+	"errors"
 )
 
-func expect[A, B comparable](t *testing.T, f func() (A, B, error), wanta A, wantb B) {
-	t.Helper()
-	gota, gotb, err := f()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if gota != wanta {
-		t.Fatalf("want %#v, but got %#v", wanta, gota)
-	}
-	if gotb != wantb {
-		t.Fatalf("want %#v, but got %#v", wantb, gotb)
-	}
-}
+// ErrNotDouble is an error that represents a type error.
+var ErrNotDouble = errors.New("value is not a double")
 
-func expectEOF[A, B any](t *testing.T, f func() (A, B, error)) {
-	t.Helper()
-	_, _, err := f()
-	if err != io.EOF {
-		t.Fatalf("expected EOF, but got err = %v", err)
-	}
-}
+// ErrNotInt is an error that represents a type error.
+var ErrNotInt = errors.New("value is not a int")
+
+// ErrNotBytes is an error that represents a type error.
+var ErrNotBytes = errors.New("value is not a bytes")
+
+// ErrNotValue is an error that says that all attempts at getting a value failed.
+var ErrNotValue = errors.New("all values return an error")

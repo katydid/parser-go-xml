@@ -53,6 +53,7 @@ func TestPersonManual(t *testing.T) {
 	expect(t, x.Next, EndKind, "XXX_unrecognized")
 	expect(t, x.Next, CharKind, "\n")
 	expect(t, x.Next, EndKind, "Person")
+	expectEOF(t, x.Next)
 }
 
 func TestAttrManual(t *testing.T) {
@@ -68,4 +69,5 @@ func TestAttrManual(t *testing.T) {
 	expect(t, x.Next, AttrValueKind, "TheStreet")
 	expect(t, x.Next, EndKind, "Address")
 	expect(t, x.Next, EndKind, "Person")
+	expectEOF(t, x.Next)
 }
