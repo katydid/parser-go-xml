@@ -17,11 +17,11 @@ package scan
 type TokenType byte
 
 const UnknownToken = TokenType(0)
-const StartToken = TokenType(1)
-const AttrKeyToken = TokenType(2)
-const AttrValueToken = TokenType(3)
-const CharToken = TokenType(4)
-const EndToken = TokenType(5)
+const StartToken = TokenType('<')
+const AttrKeyToken = TokenType('k')
+const AttrValueToken = TokenType('v')
+const CharToken = TokenType('c')
+const EndToken = TokenType('>')
 
 type Token struct {
 	Typ TokenType
