@@ -14,16 +14,11 @@
 
 package scan
 
-type TokenType byte
+type Kind byte
 
-const UnknownToken = TokenType(0)
-const StartToken = TokenType('<')
-const AttrKeyToken = TokenType('k')
-const AttrValueToken = TokenType('v')
-const CharToken = TokenType('c')
-const EndToken = TokenType('>')
-
-type Token struct {
-	Typ TokenType
-	Val string
-}
+const UnknownKind = Kind(0)
+const StartKind = Kind('<')
+const AttrKeyKind = Kind('k')
+const AttrValueKind = Kind('v')
+const CharKind = Kind('c')
+const EndKind = Kind('>')

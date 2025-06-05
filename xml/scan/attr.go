@@ -33,29 +33,23 @@ func newAttrs(xmlattrs []xml.Attr) *attrs {
 	return &attrs{attrs: attrlist, index: 0, atValue: false}
 }
 
-func (a *attrs) Next() (Token, error) {
+func (a *attrs) Next() (Kind, string, error) {
 	if a.index >= len(a.attrs) {
-		return Token{Typ: UnknownToken}, io.EOF
+		return UnknownKind, "", io.EOF
 	}
 	if a.atValue {
 		// we are at the value, so return the value
-		token := Token{
-			Typ: AttrValueToken,
-			Val: a.attrs[a.index].val,
-		}
+		val := a.attrs[a.index].val
 		// move onto next key
 		a.atValue = false
 		a.index++
-		return token, nil
+		return AttrValueKind, val, nil
 	}
 	// we are at the key, so return the key
-	token := Token{
-		Typ: AttrKeyToken,
-		Val: a.attrs[a.index].key,
-	}
+	key := a.attrs[a.index].key
 	// move onto the value of this key
 	a.atValue = true
-	return token, nil
+	return AttrKeyKind, key, nil
 }
 
 type attr struct {

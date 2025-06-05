@@ -27,14 +27,17 @@ func expectNoErr(t *testing.T, f func() error) {
 	}
 }
 
-func expect[A comparable](t *testing.T, f func() (A, error), want A) {
+func expect[A, B comparable](t *testing.T, f func() (A, B, error), wanta A, wantb B) {
 	t.Helper()
-	got, err := f()
+	gota, gotb, err := f()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if got != want {
-		t.Fatalf("want %#v, but got %#v", want, got)
+	if gota != wanta {
+		t.Fatalf("want %#v, but got %#v", wanta, gota)
+	}
+	if gotb != wantb {
+		t.Fatalf("want %#v, but got %#v", wantb, gotb)
 	}
 }
 

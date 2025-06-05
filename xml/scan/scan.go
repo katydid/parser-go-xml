@@ -21,7 +21,7 @@ import (
 )
 
 type Scanner interface {
-	Next() (Token, error)
+	Next() (Kind, string, error)
 }
 
 type scanner struct {
@@ -38,46 +38,35 @@ func NewScanner(buf []byte) Scanner {
 	return &scanner{d: dec}
 }
 
-func (s *scanner) Next() (Token, error) {
+func (s *scanner) Next() (Kind, string, error) {
 	if s.current == nil {
 		if err := s.next(); err != nil {
-			return Token{Typ: UnknownToken}, err
+			return UnknownKind, "", err
 		}
 	}
 	switch t := s.current.(type) {
 	case xml.StartElement:
 		if s.attrs == nil {
 			s.attrs = newAttrs(t.Attr)
-			return Token{
-				Typ: StartToken,
-				Val: t.Name.Local,
-			}, nil
+			return StartKind, t.Name.Local, nil
 		}
-		tok, err := s.attrs.Next()
+		kind, val, err := s.attrs.Next()
 		if err == nil {
-			return tok, nil
+			return kind, val, nil
 		}
 		if err != io.EOF {
-			return Token{Typ: UnknownToken}, err
+			return UnknownKind, "", err
 		}
 		s.reset()
 		return s.Next()
 	case xml.CharData:
-		token := Token{
-			Typ: CharToken,
-			Val: string(t),
-		}
 		s.reset()
-		return token, nil
+		return CharKind, string(t), nil
 	case xml.EndElement:
-		token := Token{
-			Typ: EndToken,
-			Val: t.Name.Local,
-		}
 		s.reset()
-		return token, nil
+		return EndKind, t.Name.Local, nil
 	}
-	return Token{Typ: UnknownToken}, nil
+	return UnknownKind, "", nil
 }
 
 func (s *scanner) reset() {
@@ -90,7 +79,7 @@ func (s *scanner) next() error {
 	tok, err := s.d.Token()
 	for {
 		if err != nil {
-			s.current = &Token{Typ: UnknownToken}
+			s.current = tok
 			return err
 		}
 		switch t := tok.(type) {
