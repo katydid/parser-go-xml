@@ -72,8 +72,7 @@ func (p *parser) Next() (parse.Hint, error) {
 }
 
 func (p *parser) nextStart() (parse.Hint, error) {
-	p.state = startedState
-	// return fake open array
+	p.down(startedState)
 	return parse.ArrayOpenHint, nil
 }
 
@@ -81,8 +80,9 @@ func (p *parser) nextStarted() (parse.Hint, error) {
 	scanKind, err := p.tokenizer.Next()
 	if err != nil {
 		if err == io.EOF {
-			p.state = endState
-			// return fake close array
+			if err := p.up(); err != nil {
+				return parse.UnknownHint, err
+			}
 			return parse.ArrayCloseHint, nil
 		}
 		return parse.UnknownHint, err
@@ -168,7 +168,67 @@ func (p *parser) nextObjectValued() (parse.Hint, error) {
 	return parse.ObjectCloseHint, nil
 }
 
+// startState
+// startedState
+// arrayOpenedState
+// objectOpenedState
+// objectKeyedState
+// objectValuedState
+// attrOpenedState
+// attrKeyedState
+// attrValuedState
+// endState
+
 func (p *parser) Skip() error {
+	switch p.state {
+	case startedState, arrayOpenedState:
+		// '[' has been parsed or
+		// '['"e1",...,"en" has been parsed.
+		// call Next until ']' is parsed,
+		// which will result in the stack being popped,
+		// which will result in the stack size being smaller.
+		currentStackSize := len(p.stack)
+		for len(p.stack) >= currentStackSize {
+			_, err := p.Next()
+			if err != nil {
+				return err
+			}
+		}
+	case objectOpenedState, objectValuedState, attrOpenedState, attrValuedState:
+		// '{' has been parsed or
+		// '{'"k1":"v1",...,"kn":"vn" has been parsed.
+		// call Next until '}' is parsed,
+		// which will result in the stack being popped,
+		// which will result in the stack size being smaller.
+		currentStackSize := len(p.stack)
+		for len(p.stack) >= currentStackSize {
+			_, err := p.Next()
+			if err != nil {
+				return err
+			}
+		}
+	case objectKeyedState, attrKeyedState:
+		currentStackSize := len(p.stack)
+		_, err := p.Next()
+		if err != nil {
+			return err
+		}
+		// If Next parsed down into an array or object,
+		// then keep on parsing until we reach our current level.
+		// If Next parsed a string, number, boolean or null,
+		// then the level would be the same.
+		for len(p.stack) > currentStackSize {
+			_, err := p.Next()
+			if err != nil {
+				return err
+			}
+		}
+	default:
+		_, err := p.Next()
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -202,5 +262,8 @@ func (p *parser) up() error {
 	// but do it in a way that keeps the capacity,
 	// so we can reuse it the next time Down is called.
 	p.stack = p.stack[:top]
+	if len(p.stack) == 0 {
+		p.state = endState
+	}
 	return nil
 }
