@@ -25,6 +25,7 @@ import (
 
 type Parser interface {
 	parse.Parser
+	TokenXMLType() XMLType
 }
 
 type parser struct {
@@ -32,6 +33,7 @@ type parser struct {
 	state state
 	stack []state
 
+	scanKind  scan.Kind
 	tokenizer token.Tokenizer
 }
 
@@ -78,6 +80,7 @@ func (p *parser) nextStart() (parse.Hint, error) {
 
 func (p *parser) nextStarted() (parse.Hint, error) {
 	scanKind, err := p.tokenizer.Next()
+	p.scanKind = scanKind
 	if err != nil {
 		if err == io.EOF {
 			if err := p.up(); err != nil {
@@ -168,17 +171,6 @@ func (p *parser) nextObjectValued() (parse.Hint, error) {
 	return parse.ObjectCloseHint, nil
 }
 
-// startState
-// startedState
-// arrayOpenedState
-// objectOpenedState
-// objectKeyedState
-// objectValuedState
-// attrOpenedState
-// attrKeyedState
-// attrValuedState
-// endState
-
 func (p *parser) Skip() error {
 	switch p.state {
 	case startedState, arrayOpenedState:
@@ -236,8 +228,27 @@ func (p *parser) Token() (parse.Kind, []byte, error) {
 	return p.tokenizer.Token()
 }
 
+func (p *parser) TokenXMLType() XMLType {
+	switch p.scanKind {
+	case scan.UnknownKind:
+		return UnknownXMLType
+	case scan.StartKind:
+		return ElemXMLType
+	case scan.AttrKeyKind:
+		return AttrXMLType
+	case scan.AttrValueKind:
+		return TextXMLType
+	case scan.CharKind:
+		return TextXMLType
+	case scan.EndKind:
+		return UnknownXMLType
+	}
+	panic("unreachable")
+}
+
 func (p *parser) nextToken() (scan.Kind, error) {
 	scanKind, err := p.tokenizer.Next()
+	p.scanKind = scanKind
 	if err == nil {
 		return scanKind, nil
 	}
