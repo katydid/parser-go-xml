@@ -15,6 +15,7 @@
 package token
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -81,6 +82,16 @@ func (t *tokenizer) Token() (parse.Kind, []byte, error) {
 	return t.tokenKind, t.tokenBytes, nil
 }
 
+func parseBool(str string) (bool, error) {
+	switch str {
+	case "true", "TRUE", "True":
+		return true, nil
+	case "false", "FALSE", "False":
+		return false, nil
+	}
+	return false, errors.New("not a bool")
+}
+
 func (t *tokenizer) tokenize() error {
 	if t.scanKind == scan.AttrKeyKind || t.scanKind == scan.StartKind || t.scanKind == scan.EndKind {
 		t.tokenKind = parse.StringKind
@@ -89,7 +100,7 @@ func (t *tokenizer) tokenize() error {
 		return nil
 	}
 	if t.scanKind == scan.AttrValueKind || t.scanKind == scan.CharKind {
-		b, err := strconv.ParseBool(strings.TrimSpace(string(t.scanToken)))
+		b, err := parseBool(strings.TrimSpace(string(t.scanToken)))
 		if err == nil {
 			if b {
 				t.tokenKind = parse.TrueKind

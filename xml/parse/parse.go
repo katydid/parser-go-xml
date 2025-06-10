@@ -25,7 +25,8 @@ import (
 
 type Parser interface {
 	parse.Parser
-	TokenXMLType() XMLType
+	// Internal: only for internal use
+	ScanKind() scan.Kind
 }
 
 type parser struct {
@@ -228,22 +229,11 @@ func (p *parser) Token() (parse.Kind, []byte, error) {
 	return p.tokenizer.Token()
 }
 
-func (p *parser) TokenXMLType() XMLType {
-	switch p.scanKind {
-	case scan.UnknownKind:
-		return UnknownXMLType
-	case scan.StartKind:
-		return ElemXMLType
-	case scan.AttrKeyKind:
-		return AttrXMLType
-	case scan.AttrValueKind:
-		return TextXMLType
-	case scan.CharKind:
-		return TextXMLType
-	case scan.EndKind:
-		return UnknownXMLType
-	}
-	panic("unreachable")
+// Internal: only for internal use
+// ScanKind is only used by the Tagger,
+// which needs some internal knowledge to properly apply tags.
+func (p *parser) ScanKind() scan.Kind {
+	return p.scanKind
 }
 
 func (p *parser) nextToken() (scan.Kind, error) {

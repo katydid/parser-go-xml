@@ -54,6 +54,7 @@ func TestElementsAndAttributesAndChars(t *testing.T) {
 	expect.Hint(t, x, parse.ObjectCloseHint)
 
 	expect.Hint(t, x, parse.ArrayCloseHint)
+	expect.EOF(t, x)
 }
 
 func TestParseElementsAndCharsAndWhiteSpaceManual(t *testing.T) {
