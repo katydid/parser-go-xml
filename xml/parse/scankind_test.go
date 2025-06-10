@@ -17,19 +17,20 @@ package parse
 import (
 	"testing"
 
+	"github.com/katydid/parser-go-xml/xml/scan"
 	"github.com/katydid/parser-go/expect"
 	"github.com/katydid/parser-go/parse"
 )
 
-func expectXMLType(t *testing.T, p Parser, want XMLType) {
+func expectScanKind(t *testing.T, p Parser, want scan.Kind) {
 	t.Helper()
-	got := p.TokenXMLType()
+	got := p.ScanKind()
 	if got != want {
 		t.Fatalf("expected xml type %c, but got %c", want, got)
 	}
 }
 
-func TestXMLType(t *testing.T) {
+func TestScanKind(t *testing.T) {
 	astr := `<a k1="v1" k2="v2">b</a>`
 	// [{"a": [{"k1": "v1"}, {"k2": v2"}, "b"]}]
 	x := NewParser([]byte(astr))
@@ -37,30 +38,30 @@ func TestXMLType(t *testing.T) {
 	expect.Hint(t, x, parse.ObjectOpenHint)
 
 	expect.Hint(t, x, parse.KeyHint)
-	expectXMLType(t, x, ElemXMLType)
+	expectScanKind(t, x, scan.StartKind)
 	expect.String(t, x, "a")
 	expect.Hint(t, x, parse.ArrayOpenHint)
 
 	expect.Hint(t, x, parse.ObjectOpenHint)
 	expect.Hint(t, x, parse.KeyHint)
-	expectXMLType(t, x, AttrXMLType)
+	expectScanKind(t, x, scan.AttrKeyKind)
 	expect.String(t, x, "k1")
 	expect.Hint(t, x, parse.ValueHint)
-	expectXMLType(t, x, TextXMLType)
+	expectScanKind(t, x, scan.AttrValueKind)
 	expect.String(t, x, "v1")
 	expect.Hint(t, x, parse.ObjectCloseHint)
 
 	expect.Hint(t, x, parse.ObjectOpenHint)
 	expect.Hint(t, x, parse.KeyHint)
-	expectXMLType(t, x, AttrXMLType)
+	expectScanKind(t, x, scan.AttrKeyKind)
 	expect.String(t, x, "k2")
 	expect.Hint(t, x, parse.ValueHint)
-	expectXMLType(t, x, TextXMLType)
+	expectScanKind(t, x, scan.AttrValueKind)
 	expect.String(t, x, "v2")
 	expect.Hint(t, x, parse.ObjectCloseHint)
 
 	expect.Hint(t, x, parse.ValueHint)
-	expectXMLType(t, x, TextXMLType)
+	expectScanKind(t, x, scan.CharKind)
 	expect.String(t, x, "b")
 
 	expect.Hint(t, x, parse.ArrayCloseHint)

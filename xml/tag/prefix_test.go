@@ -22,7 +22,7 @@ import (
 	"github.com/katydid/parser-go/parse"
 )
 
-func TestTagger(t *testing.T) {
+func TestTaggerPrefix(t *testing.T) {
 	str := `<a k1="v1" k2="v2">b</a>`
 	x := NewTagger(xmlparse.NewParser([]byte(str)), WithAttrPrefix("attr_"), WithElemPrefix("elem_"), WithTextPrefix("text_"))
 	expect.Hint(t, x, parse.ArrayOpenHint)
