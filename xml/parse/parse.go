@@ -24,7 +24,23 @@ import (
 )
 
 type Parser interface {
-	parse.Parser
+	// Next returns the Hint of the token or an error.
+	Next() (Hint, error)
+
+	// Skip allows the user to skip over uninteresting parts of the parse tree.
+	// Based on the Hint skip has different intuitive behaviours.
+	// If the Hint was:
+	// * '{': the whole Map is skipped.
+	// * 'k': the key's value is skipped.
+	// * '[': the whole List is skipped.
+	// * 'v': the rest of the Map or List is skipped.
+	// * ']': same as calling Next and ignoring the Hint.
+	// * '}': same as calling Next and ignoring the Hint.
+	Skip() error
+
+	// Tokenize parses the current token.
+	Token() (parse.Kind, []byte, error)
+
 	// Internal: only for internal use
 	ScanKind() scan.Kind
 }
@@ -47,7 +63,7 @@ func NewParser(buf []byte) Parser {
 	return p
 }
 
-func (p *parser) Next() (parse.Hint, error) {
+func (p *parser) Next() (Hint, error) {
 	switch p.state {
 	case startState:
 		return p.nextStart()
@@ -68,108 +84,108 @@ func (p *parser) Next() (parse.Hint, error) {
 	case attrValuedState:
 		return p.nextAttrValued()
 	case endState:
-		return parse.UnknownHint, io.EOF
+		return UnknownHint, io.EOF
 	default:
 		panic("unreachable")
 	}
 }
 
-func (p *parser) nextStart() (parse.Hint, error) {
+func (p *parser) nextStart() (Hint, error) {
 	p.down(startedState)
-	return parse.ArrayOpenHint, nil
+	return ArrayOpenHint, nil
 }
 
-func (p *parser) nextStarted() (parse.Hint, error) {
+func (p *parser) nextStarted() (Hint, error) {
 	scanKind, err := p.tokenizer.Next()
 	p.scanKind = scanKind
 	if err != nil {
 		if err == io.EOF {
 			if err := p.up(); err != nil {
-				return parse.UnknownHint, err
+				return UnknownHint, err
 			}
-			return parse.ArrayCloseHint, nil
+			return ArrayCloseHint, nil
 		}
-		return parse.UnknownHint, err
+		return UnknownHint, err
 	}
 	switch scanKind {
 	case scan.StartKind:
 		p.down(objectOpenedState)
-		return parse.ObjectOpenHint, nil
+		return ObjectOpenHint, nil
 	case scan.CharKind:
-		return parse.ValueHint, nil
+		return ValueHint, nil
 	case scan.AttrKeyKind, scan.AttrValueKind, scan.EndKind:
-		return parse.UnknownHint, errors.New("expected start element or characters")
+		return UnknownHint, errors.New("expected start element or characters")
 	default:
 		panic("unreachable")
 	}
 }
 
-func (p *parser) nextArrayOpened() (parse.Hint, error) {
+func (p *parser) nextArrayOpened() (Hint, error) {
 	scanKind, err := p.nextToken()
 	if err != nil {
-		return parse.UnknownHint, err
+		return UnknownHint, err
 	}
 	switch scanKind {
 	case scan.StartKind:
 		p.down(objectOpenedState)
-		return parse.ObjectOpenHint, nil
+		return ObjectOpenHint, nil
 	case scan.CharKind:
-		return parse.ValueHint, nil
+		return ValueHint, nil
 	case scan.AttrKeyKind:
 		p.down(attrOpenedState)
-		return parse.ObjectOpenHint, nil
+		return ObjectOpenHint, nil
 	case scan.AttrValueKind:
-		return parse.UnknownHint, errors.New("expected start element, characters, attribute key or end element")
+		return UnknownHint, errors.New("expected start element, characters, attribute key or end element")
 	case scan.EndKind:
 		if err := p.up(); err != nil {
-			return parse.UnknownHint, err
+			return UnknownHint, err
 		}
-		return parse.ArrayCloseHint, nil
+		return ArrayCloseHint, nil
 	default:
 		panic("unreachable")
 	}
 }
 
-func (p *parser) nextAttrOpened() (parse.Hint, error) {
+func (p *parser) nextAttrOpened() (Hint, error) {
 	p.state = attrKeyedState
-	return parse.KeyHint, nil
+	return KeyHint, nil
 }
 
-func (p *parser) nextAttrKeyed() (parse.Hint, error) {
+func (p *parser) nextAttrKeyed() (Hint, error) {
 	scanKind, err := p.nextToken()
 	if err != nil {
-		return parse.UnknownHint, err
+		return UnknownHint, err
 	}
 	if scanKind != scan.AttrValueKind {
-		return parse.UnknownHint, errors.New("expected attr value")
+		return UnknownHint, errors.New("expected attr value")
 	}
 	p.state = attrValuedState
-	return parse.ValueHint, nil
+	return ValueHint, nil
 }
 
-func (p *parser) nextAttrValued() (parse.Hint, error) {
+func (p *parser) nextAttrValued() (Hint, error) {
 	if err := p.up(); err != nil {
-		return parse.UnknownHint, err
+		return UnknownHint, err
 	}
-	return parse.ObjectCloseHint, nil
+	return ObjectCloseHint, nil
 }
 
-func (p *parser) nextObjectOpened() (parse.Hint, error) {
+func (p *parser) nextObjectOpened() (Hint, error) {
 	p.state = objectKeyedState
-	return parse.KeyHint, nil
+	return KeyHint, nil
 }
 
-func (p *parser) nextObjectKeyed() (parse.Hint, error) {
+func (p *parser) nextObjectKeyed() (Hint, error) {
 	p.state = objectValuedState
 	p.down(arrayOpenedState)
-	return parse.ArrayOpenHint, nil
+	return ArrayOpenHint, nil
 }
 
-func (p *parser) nextObjectValued() (parse.Hint, error) {
+func (p *parser) nextObjectValued() (Hint, error) {
 	if err := p.up(); err != nil {
-		return parse.UnknownHint, err
+		return UnknownHint, err
 	}
-	return parse.ObjectCloseHint, nil
+	return ObjectCloseHint, nil
 }
 
 func (p *parser) Skip() error {

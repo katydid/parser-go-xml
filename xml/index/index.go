@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io"
 
+	xmlparse "github.com/katydid/parser-go-xml/xml/parse"
 	"github.com/katydid/parser-go/cast"
 	"github.com/katydid/parser-go/parse"
 )
@@ -27,14 +28,14 @@ type Parser interface {
 }
 
 type parser struct {
-	parser parse.Parser
+	parser xmlparse.Parser
 
 	// state
 	state state
 	stack []state
 }
 
-func WithIndexedArrays(p parse.Parser) parse.Parser {
+func WithIndexedArrays(p xmlparse.Parser) parse.Parser {
 	return &parser{
 		parser: p,
 		state:  state{},
@@ -50,61 +51,61 @@ func (p *parser) Next() (parse.Hint, error) {
 			return parse.UnknownHint, err
 		}
 		switch h {
-		case parse.ObjectOpenHint:
+		case xmlparse.ObjectOpenHint:
 			p.down(startState)
-			return parse.ObjectOpenHint, nil
-		case parse.ObjectCloseHint:
+			return parse.EnterHint, nil
+		case xmlparse.ObjectCloseHint:
 			if err := p.up(); err != nil {
 				return parse.UnknownHint, err
 			}
-			return parse.ObjectCloseHint, nil
-		case parse.ArrayOpenHint:
+			return parse.LeaveHint, nil
+		case xmlparse.ArrayOpenHint:
 			p.down(arrayIndexState)
-			return parse.ArrayOpenHint, nil
-		case parse.ArrayCloseHint:
+			return parse.EnterHint, nil
+		case xmlparse.ArrayCloseHint:
 			if err := p.up(); err != nil {
 				return parse.UnknownHint, err
 			}
-			return parse.ArrayCloseHint, nil
+			return parse.LeaveHint, nil
 		}
-		return h, nil
+		return translateHint(h), nil
 	case arrayIndexState:
 		h, err := p.parser.Next()
 		if err != nil {
 			return parse.UnknownHint, err
 		}
 		p.state.hint = h
-		if p.state.hint == parse.ArrayCloseHint {
+		if p.state.hint == xmlparse.ArrayCloseHint {
 			if err := p.up(); err != nil {
 				return parse.UnknownHint, err
 			}
-			return parse.ArrayCloseHint, nil
+			return parse.LeaveHint, nil
 		}
 		p.state.index++
 		p.state.kind = arrayElemState
-		return parse.KeyHint, nil
+		return parse.FieldHint, nil
 	case arrayElemState:
 		p.state.kind = arrayIndexState
 		h := p.state.hint
 		switch h {
-		case parse.ObjectOpenHint:
+		case xmlparse.ObjectOpenHint:
 			p.down(startState)
-			return parse.ObjectOpenHint, nil
-		case parse.ObjectCloseHint:
+			return parse.EnterHint, nil
+		case xmlparse.ObjectCloseHint:
 			if err := p.up(); err != nil {
 				return parse.UnknownHint, err
 			}
-			return parse.ObjectCloseHint, nil
-		case parse.ArrayOpenHint:
+			return parse.LeaveHint, nil
+		case xmlparse.ArrayOpenHint:
 			p.down(arrayIndexState)
-			return parse.ArrayOpenHint, nil
-		case parse.ArrayCloseHint:
+			return parse.EnterHint, nil
+		case xmlparse.ArrayCloseHint:
 			if err := p.up(); err != nil {
 				return parse.UnknownHint, err
 			}
-			return parse.ArrayCloseHint, nil
+			return parse.LeaveHint, nil
 		}
-		return h, nil
+		return translateHint(h), nil
 	case endState:
 		return parse.UnknownHint, io.EOF
 	}
@@ -118,13 +119,13 @@ func (p *parser) Skip() error {
 			_, err := p.Next()
 			return err
 		}
-		if p.state.hint != parse.KeyHint {
+		if p.state.hint != xmlparse.KeyHint {
 			// do not go up when it is an object value that needs to be skipped over
 			if err := p.up(); err != nil {
 				return err
 			}
 		}
-		p.state.hint = parse.UnknownHint
+		p.state.hint = xmlparse.UnknownHint
 		return p.parser.Skip()
 	case arrayIndexState:
 		if err := p.up(); err != nil {
@@ -133,7 +134,7 @@ func (p *parser) Skip() error {
 		return p.parser.Skip()
 	case arrayElemState:
 		p.state.kind = arrayIndexState
-		if p.state.hint == parse.ValueHint {
+		if p.state.hint == xmlparse.ValueHint {
 			// values do not need to be skipped, Next will take care of it.
 			return nil
 		}

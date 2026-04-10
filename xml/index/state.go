@@ -14,12 +14,14 @@
 
 package index
 
-import "github.com/katydid/parser-go/parse"
+import (
+	xmlparse "github.com/katydid/parser-go-xml/xml/parse"
+)
 
 type state struct {
 	kind  stateKind
 	index int64
-	hint  parse.Hint
+	hint  xmlparse.Hint
 }
 
 type stateKind byte

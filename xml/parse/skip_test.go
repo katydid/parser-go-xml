@@ -16,38 +16,35 @@ package parse
 
 import (
 	"testing"
-
-	"github.com/katydid/parser-go/expect"
-	"github.com/katydid/parser-go/parse"
 )
 
 func TestSkipEmpty(t *testing.T) {
 	str := ""
 	// `[]`
 	p := NewParser([]byte(str))
-	expect.NoErr(t, p.Skip)
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.EOF(t, p)
+	expectNoErr(t, p.Skip)
+	expectHint(t, p, ArrayCloseHint)
+	expectEOF(t, p)
 }
 
 func TestSkipChar(t *testing.T) {
 	str := "a"
 	// `[a]`
 	p := NewParser([]byte(str))
-	expect.NoErr(t, p.Skip)
-	expect.Hint(t, p, parse.ValueHint)
-	expect.String(t, p, "a")
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.EOF(t, p)
+	expectNoErr(t, p.Skip)
+	expectHint(t, p, ValueHint)
+	expectString(t, p, "a")
+	expectHint(t, p, ArrayCloseHint)
+	expectEOF(t, p)
 }
 
 func TestSkipUnknownString(t *testing.T) {
 	str := "abc"
 	// `"abc"`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.NoErr(t, p.Skip)
-	expect.EOF(t, p)
+	expectHint(t, p, ArrayOpenHint)
+	expectNoErr(t, p.Skip)
+	expectEOF(t, p)
 }
 
 // If the kind '[' was returned by Next, then the whole array is skipped.
@@ -55,27 +52,27 @@ func TestSkipArrayOpen(t *testing.T) {
 	str := "<a/><b/>"
 	// `[a,b]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.NoErr(t, p.Skip)
+	expectHint(t, p, ArrayOpenHint)
+	expectNoErr(t, p.Skip)
 	// skipped over <a/>,<b/>]
-	expect.EOF(t, p)
+	expectEOF(t, p)
 }
 
 func TestSkipArrayNestedOpen(t *testing.T) {
 	str := "<a><b/><c/></a>"
 	// `[{"a":[{"b":[]},{"c":[]}]}]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "a")
-	expect.Hint(t, p, parse.ArrayOpenHint)
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "a")
+	expectHint(t, p, ArrayOpenHint)
 
-	expect.NoErr(t, p.Skip)
+	expectNoErr(t, p.Skip)
 	// skipped over <b/>,<c/>]
-	expect.Hint(t, p, parse.ObjectCloseHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.EOF(t, p)
+	expectHint(t, p, ObjectCloseHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectEOF(t, p)
 }
 
 // If an array element was parsed, then the rest of the array is skipped.
@@ -83,24 +80,24 @@ func TestSkipArrayElement(t *testing.T) {
 	str := `<a><b/><c/><d/></a>`
 	// `[{"a":[{"b":[]},{"c":[]},{"d":[]}]}]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "a")
-	expect.Hint(t, p, parse.ArrayOpenHint)
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "a")
+	expectHint(t, p, ArrayOpenHint)
 
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "b")
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.Hint(t, p, parse.ObjectCloseHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "b")
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectHint(t, p, ObjectCloseHint)
 
-	expect.NoErr(t, p.Skip)
+	expectNoErr(t, p.Skip)
 	// skipped over <c/>,<d/>]
-	expect.Hint(t, p, parse.ObjectCloseHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.EOF(t, p)
+	expectHint(t, p, ObjectCloseHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectEOF(t, p)
 }
 
 // If the kind '{' was returned by Next, then the whole object is skipped.
@@ -108,30 +105,30 @@ func TestSkipObjectOpen(t *testing.T) {
 	str := `<a><b/></a>`
 	// `[{"a":[{"b":[]}]}]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.NoErr(t, p.Skip)
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectNoErr(t, p.Skip)
 	// skipped over "a":[{"b":[]}]}
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.EOF(t, p)
+	expectHint(t, p, ArrayCloseHint)
+	expectEOF(t, p)
 }
 
 func TestSkipObjectNestedOpen(t *testing.T) {
 	str := `<a><b><c/></b></a>`
 	// `[{"a":[{"b":[{"c":[]}]}]}]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "a")
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.NoErr(t, p.Skip)
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "a")
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectNoErr(t, p.Skip)
 	// skipped over "b":[{"c":[]}]}
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.Hint(t, p, parse.ObjectCloseHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.EOF(t, p)
+	expectHint(t, p, ArrayCloseHint)
+	expectHint(t, p, ObjectCloseHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectEOF(t, p)
 }
 
 // If a object key was just parsed, then that key's value is skipped.
@@ -139,27 +136,27 @@ func TestSkipObjectValueValue(t *testing.T) {
 	str := `<a><b>c</b>d</a>`
 	// `[{"a":[{"b":["c"]}, "d"]}]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "a")
-	expect.Hint(t, p, parse.ArrayOpenHint)
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "a")
+	expectHint(t, p, ArrayOpenHint)
 
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "b")
-	expect.NoErr(t, p.Skip)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "b")
+	expectNoErr(t, p.Skip)
 	// skipped over ["c"]
-	expect.Hint(t, p, parse.ObjectCloseHint)
+	expectHint(t, p, ObjectCloseHint)
 
-	expect.Hint(t, p, parse.ValueHint)
-	expect.String(t, p, "d")
+	expectHint(t, p, ValueHint)
+	expectString(t, p, "d")
 
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.Hint(t, p, parse.ObjectCloseHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectHint(t, p, ObjectCloseHint)
+	expectHint(t, p, ArrayCloseHint)
 
-	expect.EOF(t, p)
+	expectEOF(t, p)
 }
 
 // If a object key was just parsed, then that key's value is skipped.
@@ -167,52 +164,52 @@ func TestSkipObjectValueObject(t *testing.T) {
 	str := `<a><b><c/></b>d</a>`
 	// `[{"a":[{"b":[{"c":[]}]}, "d"]}]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "a")
-	expect.Hint(t, p, parse.ArrayOpenHint)
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "a")
+	expectHint(t, p, ArrayOpenHint)
 
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "b")
-	expect.NoErr(t, p.Skip)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "b")
+	expectNoErr(t, p.Skip)
 	// skipped over [{"c":[]}]
-	expect.Hint(t, p, parse.ObjectCloseHint)
+	expectHint(t, p, ObjectCloseHint)
 
-	expect.Hint(t, p, parse.ValueHint)
-	expect.String(t, p, "d")
+	expectHint(t, p, ValueHint)
+	expectString(t, p, "d")
 
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.Hint(t, p, parse.ObjectCloseHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectHint(t, p, ObjectCloseHint)
+	expectHint(t, p, ArrayCloseHint)
 
-	expect.EOF(t, p)
+	expectEOF(t, p)
 }
 
 func TestSkipObjectRecursiveValue(t *testing.T) {
 	str := `<a><b><c>f<u/>k</c></b>d</a>`
 	// `[{"a":[{"b":[{"c":[...]}]}, "d"]}]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "a")
-	expect.Hint(t, p, parse.ArrayOpenHint)
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "a")
+	expectHint(t, p, ArrayOpenHint)
 
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "b")
-	expect.NoErr(t, p.Skip)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "b")
+	expectNoErr(t, p.Skip)
 	// skipped over [{"c":[]}]
-	expect.Hint(t, p, parse.ObjectCloseHint)
+	expectHint(t, p, ObjectCloseHint)
 
-	expect.Hint(t, p, parse.ValueHint)
-	expect.String(t, p, "d")
+	expectHint(t, p, ValueHint)
+	expectString(t, p, "d")
 
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.Hint(t, p, parse.ObjectCloseHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectHint(t, p, ObjectCloseHint)
+	expectHint(t, p, ArrayCloseHint)
 
-	expect.EOF(t, p)
+	expectEOF(t, p)
 }

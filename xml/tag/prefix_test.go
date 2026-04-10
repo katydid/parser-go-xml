@@ -25,33 +25,33 @@ import (
 func TestTaggerPrefix(t *testing.T) {
 	str := `<a k1="v1" k2="v2">b</a>`
 	x := NewTagger(xmlparse.NewParser([]byte(str)), WithAttrPrefix("attr_"), WithElemPrefix("elem_"), WithTextPrefix("text_"))
-	expect.Hint(t, x, parse.ArrayOpenHint)
-	expect.Hint(t, x, parse.ObjectOpenHint)
+	expect.Hint(t, x, parse.EnterHint)
+	expect.Hint(t, x, parse.EnterHint)
 
-	expect.Hint(t, x, parse.KeyHint)
+	expect.Hint(t, x, parse.FieldHint)
 	expect.String(t, x, "elem_a")
-	expect.Hint(t, x, parse.ArrayOpenHint)
+	expect.Hint(t, x, parse.EnterHint)
 
-	expect.Hint(t, x, parse.ObjectOpenHint)
-	expect.Hint(t, x, parse.KeyHint)
+	expect.Hint(t, x, parse.EnterHint)
+	expect.Hint(t, x, parse.FieldHint)
 	expect.String(t, x, "attr_k1")
 	expect.Hint(t, x, parse.ValueHint)
 	expect.String(t, x, "text_v1")
-	expect.Hint(t, x, parse.ObjectCloseHint)
+	expect.Hint(t, x, parse.LeaveHint)
 
-	expect.Hint(t, x, parse.ObjectOpenHint)
-	expect.Hint(t, x, parse.KeyHint)
+	expect.Hint(t, x, parse.EnterHint)
+	expect.Hint(t, x, parse.FieldHint)
 	expect.String(t, x, "attr_k2")
 	expect.Hint(t, x, parse.ValueHint)
 	expect.String(t, x, "text_v2")
-	expect.Hint(t, x, parse.ObjectCloseHint)
+	expect.Hint(t, x, parse.LeaveHint)
 
 	expect.Hint(t, x, parse.ValueHint)
 	expect.String(t, x, "text_b")
 
-	expect.Hint(t, x, parse.ArrayCloseHint)
+	expect.Hint(t, x, parse.LeaveHint)
 
-	expect.Hint(t, x, parse.ObjectCloseHint)
+	expect.Hint(t, x, parse.LeaveHint)
 
-	expect.Hint(t, x, parse.ArrayCloseHint)
+	expect.Hint(t, x, parse.LeaveHint)
 }

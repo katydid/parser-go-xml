@@ -18,8 +18,6 @@ import (
 	"testing"
 
 	"github.com/katydid/parser-go-xml/xml/scan"
-	"github.com/katydid/parser-go/expect"
-	"github.com/katydid/parser-go/parse"
 )
 
 func expectScanKind(t *testing.T, p Parser, want scan.Kind) {
@@ -34,39 +32,39 @@ func TestScanKind(t *testing.T) {
 	astr := `<a k1="v1" k2="v2">b</a>`
 	// [{"a": [{"k1": "v1"}, {"k2": v2"}, "b"]}]
 	x := NewParser([]byte(astr))
-	expect.Hint(t, x, parse.ArrayOpenHint)
-	expect.Hint(t, x, parse.ObjectOpenHint)
+	expectHint(t, x, ArrayOpenHint)
+	expectHint(t, x, ObjectOpenHint)
 
-	expect.Hint(t, x, parse.KeyHint)
+	expectHint(t, x, KeyHint)
 	expectScanKind(t, x, scan.StartKind)
-	expect.String(t, x, "a")
-	expect.Hint(t, x, parse.ArrayOpenHint)
+	expectString(t, x, "a")
+	expectHint(t, x, ArrayOpenHint)
 
-	expect.Hint(t, x, parse.ObjectOpenHint)
-	expect.Hint(t, x, parse.KeyHint)
+	expectHint(t, x, ObjectOpenHint)
+	expectHint(t, x, KeyHint)
 	expectScanKind(t, x, scan.AttrKeyKind)
-	expect.String(t, x, "k1")
-	expect.Hint(t, x, parse.ValueHint)
+	expectString(t, x, "k1")
+	expectHint(t, x, ValueHint)
 	expectScanKind(t, x, scan.AttrValueKind)
-	expect.String(t, x, "v1")
-	expect.Hint(t, x, parse.ObjectCloseHint)
+	expectString(t, x, "v1")
+	expectHint(t, x, ObjectCloseHint)
 
-	expect.Hint(t, x, parse.ObjectOpenHint)
-	expect.Hint(t, x, parse.KeyHint)
+	expectHint(t, x, ObjectOpenHint)
+	expectHint(t, x, KeyHint)
 	expectScanKind(t, x, scan.AttrKeyKind)
-	expect.String(t, x, "k2")
-	expect.Hint(t, x, parse.ValueHint)
+	expectString(t, x, "k2")
+	expectHint(t, x, ValueHint)
 	expectScanKind(t, x, scan.AttrValueKind)
-	expect.String(t, x, "v2")
-	expect.Hint(t, x, parse.ObjectCloseHint)
+	expectString(t, x, "v2")
+	expectHint(t, x, ObjectCloseHint)
 
-	expect.Hint(t, x, parse.ValueHint)
+	expectHint(t, x, ValueHint)
 	expectScanKind(t, x, scan.CharKind)
-	expect.String(t, x, "b")
+	expectString(t, x, "b")
 
-	expect.Hint(t, x, parse.ArrayCloseHint)
+	expectHint(t, x, ArrayCloseHint)
 
-	expect.Hint(t, x, parse.ObjectCloseHint)
+	expectHint(t, x, ObjectCloseHint)
 
-	expect.Hint(t, x, parse.ArrayCloseHint)
+	expectHint(t, x, ArrayCloseHint)
 }

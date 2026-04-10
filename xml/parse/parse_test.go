@@ -16,45 +16,42 @@ package parse
 
 import (
 	"testing"
-
-	"github.com/katydid/parser-go/expect"
-	"github.com/katydid/parser-go/parse"
 )
 
 func TestElementsAndAttributesAndChars(t *testing.T) {
 	astr := `<a k1="v1" k2="v2">b</a>`
 	// [{"a": [{"k1": "v1"}, {"k2": v2"}, "b"]}]
 	x := NewParser([]byte(astr))
-	expect.Hint(t, x, parse.ArrayOpenHint)
-	expect.Hint(t, x, parse.ObjectOpenHint)
+	expectHint(t, x, ArrayOpenHint)
+	expectHint(t, x, ObjectOpenHint)
 
-	expect.Hint(t, x, parse.KeyHint)
-	expect.String(t, x, "a")
-	expect.Hint(t, x, parse.ArrayOpenHint)
+	expectHint(t, x, KeyHint)
+	expectString(t, x, "a")
+	expectHint(t, x, ArrayOpenHint)
 
-	expect.Hint(t, x, parse.ObjectOpenHint)
-	expect.Hint(t, x, parse.KeyHint)
-	expect.String(t, x, "k1")
-	expect.Hint(t, x, parse.ValueHint)
-	expect.String(t, x, "v1")
-	expect.Hint(t, x, parse.ObjectCloseHint)
+	expectHint(t, x, ObjectOpenHint)
+	expectHint(t, x, KeyHint)
+	expectString(t, x, "k1")
+	expectHint(t, x, ValueHint)
+	expectString(t, x, "v1")
+	expectHint(t, x, ObjectCloseHint)
 
-	expect.Hint(t, x, parse.ObjectOpenHint)
-	expect.Hint(t, x, parse.KeyHint)
-	expect.String(t, x, "k2")
-	expect.Hint(t, x, parse.ValueHint)
-	expect.String(t, x, "v2")
-	expect.Hint(t, x, parse.ObjectCloseHint)
+	expectHint(t, x, ObjectOpenHint)
+	expectHint(t, x, KeyHint)
+	expectString(t, x, "k2")
+	expectHint(t, x, ValueHint)
+	expectString(t, x, "v2")
+	expectHint(t, x, ObjectCloseHint)
 
-	expect.Hint(t, x, parse.ValueHint)
-	expect.String(t, x, "b")
+	expectHint(t, x, ValueHint)
+	expectString(t, x, "b")
 
-	expect.Hint(t, x, parse.ArrayCloseHint)
+	expectHint(t, x, ArrayCloseHint)
 
-	expect.Hint(t, x, parse.ObjectCloseHint)
+	expectHint(t, x, ObjectCloseHint)
 
-	expect.Hint(t, x, parse.ArrayCloseHint)
-	expect.EOF(t, x)
+	expectHint(t, x, ArrayCloseHint)
+	expectEOF(t, x)
 }
 
 func TestParseElementsAndCharsAndWhiteSpaceManual(t *testing.T) {
@@ -63,118 +60,118 @@ func TestParseElementsAndCharsAndWhiteSpaceManual(t *testing.T) {
 </A>`
 	// [{"A": ["\n\t", {"B": ["C"]}, "\n"]}]
 	x := NewParser([]byte(elemStr))
-	expect.Hint(t, x, parse.ArrayOpenHint)
-	expect.Hint(t, x, parse.ObjectOpenHint)
+	expectHint(t, x, ArrayOpenHint)
+	expectHint(t, x, ObjectOpenHint)
 
-	expect.Hint(t, x, parse.KeyHint)
-	expect.String(t, x, "A")
-	expect.Hint(t, x, parse.ArrayOpenHint)
+	expectHint(t, x, KeyHint)
+	expectString(t, x, "A")
+	expectHint(t, x, ArrayOpenHint)
 
-	expect.Hint(t, x, parse.ValueHint)
-	expect.String(t, x, "\n\t")
+	expectHint(t, x, ValueHint)
+	expectString(t, x, "\n\t")
 
-	expect.Hint(t, x, parse.ObjectOpenHint)
-	expect.Hint(t, x, parse.KeyHint)
-	expect.String(t, x, "B")
+	expectHint(t, x, ObjectOpenHint)
+	expectHint(t, x, KeyHint)
+	expectString(t, x, "B")
 
-	expect.Hint(t, x, parse.ArrayOpenHint)
-	expect.Hint(t, x, parse.ValueHint)
-	expect.String(t, x, "C")
-	expect.Hint(t, x, parse.ArrayCloseHint)
+	expectHint(t, x, ArrayOpenHint)
+	expectHint(t, x, ValueHint)
+	expectString(t, x, "C")
+	expectHint(t, x, ArrayCloseHint)
 
-	expect.Hint(t, x, parse.ObjectCloseHint)
+	expectHint(t, x, ObjectCloseHint)
 
-	expect.Hint(t, x, parse.ValueHint)
-	expect.String(t, x, "\n")
+	expectHint(t, x, ValueHint)
+	expectString(t, x, "\n")
 
-	expect.Hint(t, x, parse.ArrayCloseHint)
+	expectHint(t, x, ArrayCloseHint)
 
-	expect.Hint(t, x, parse.ObjectCloseHint)
-	expect.Hint(t, x, parse.ArrayCloseHint)
-	expect.EOF(t, x)
+	expectHint(t, x, ObjectCloseHint)
+	expectHint(t, x, ArrayCloseHint)
+	expectEOF(t, x)
 }
 
 func TestParseEmpty(t *testing.T) {
 	str := ""
 	// `[]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.EOF(t, p)
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectEOF(t, p)
 }
 
 func TestParseChar(t *testing.T) {
 	str := "a"
 	// `[a]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ValueHint)
-	expect.String(t, p, "a")
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.EOF(t, p)
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ValueHint)
+	expectString(t, p, "a")
+	expectHint(t, p, ArrayCloseHint)
+	expectEOF(t, p)
 }
 
 func TestParseString(t *testing.T) {
 	str := "abc"
 	// `"abc"`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ValueHint)
-	expect.String(t, p, "abc")
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.EOF(t, p)
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ValueHint)
+	expectString(t, p, "abc")
+	expectHint(t, p, ArrayCloseHint)
+	expectEOF(t, p)
 }
 
 func TestParseArray(t *testing.T) {
 	str := "<a/><b/>"
 	// `[a,b]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
+	expectHint(t, p, ArrayOpenHint)
 
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "a")
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.Hint(t, p, parse.ObjectCloseHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "a")
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectHint(t, p, ObjectCloseHint)
 
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "b")
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.Hint(t, p, parse.ObjectCloseHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "b")
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectHint(t, p, ObjectCloseHint)
 
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.EOF(t, p)
+	expectHint(t, p, ArrayCloseHint)
+	expectEOF(t, p)
 }
 
 func TestParseArrayNestedOpen(t *testing.T) {
 	str := "<a><b/><c/></a>"
 	// `[{"a":[{"b":[]},{"c":[]}]}]`
 	p := NewParser([]byte(str))
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "a")
-	expect.Hint(t, p, parse.ArrayOpenHint)
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "a")
+	expectHint(t, p, ArrayOpenHint)
 
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "b")
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.Hint(t, p, parse.ObjectCloseHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "b")
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectHint(t, p, ObjectCloseHint)
 
-	expect.Hint(t, p, parse.ObjectOpenHint)
-	expect.Hint(t, p, parse.KeyHint)
-	expect.String(t, p, "c")
-	expect.Hint(t, p, parse.ArrayOpenHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.Hint(t, p, parse.ObjectCloseHint)
+	expectHint(t, p, ObjectOpenHint)
+	expectHint(t, p, KeyHint)
+	expectString(t, p, "c")
+	expectHint(t, p, ArrayOpenHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectHint(t, p, ObjectCloseHint)
 
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.Hint(t, p, parse.ObjectCloseHint)
-	expect.Hint(t, p, parse.ArrayCloseHint)
-	expect.EOF(t, p)
+	expectHint(t, p, ArrayCloseHint)
+	expectHint(t, p, ObjectCloseHint)
+	expectHint(t, p, ArrayCloseHint)
+	expectEOF(t, p)
 }

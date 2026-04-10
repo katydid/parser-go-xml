@@ -47,91 +47,91 @@ func (t *tagger) Next() (parse.Hint, error) {
 	case startState:
 		h, err := t.parser.Next()
 		if err != nil {
-			return h, err
+			return parse.UnknownHint, err
 		}
 		switch t.parser.ScanKind() {
 		case scan.UnknownKind:
-			return h, nil
+			return translateHint(h), nil
 		case scan.StartKind:
-			if h != parse.ObjectOpenHint {
-				return h, nil
+			if h != xmlparse.ObjectOpenHint {
+				return translateHint(h), nil
 			}
 			if !t.options.tagElems {
-				return h, nil
+				return translateHint(h), nil
 			}
 			t.down(elemTagOpenState)
-			return parse.ObjectOpenHint, nil
+			return parse.EnterHint, nil
 		case scan.EndKind:
-			if h != parse.ObjectCloseHint {
-				return h, nil
+			if h != xmlparse.ObjectCloseHint {
+				return translateHint(h), nil
 			}
 			if !t.options.tagElems {
-				return h, nil
+				return translateHint(h), nil
 			}
 			t.state = elemTagCloseState
-			return parse.ObjectCloseHint, nil
+			return parse.LeaveHint, nil
 		case scan.AttrKeyKind:
-			if h != parse.ObjectOpenHint {
-				return h, nil
+			if h != xmlparse.ObjectOpenHint {
+				return translateHint(h), nil
 			}
 			if !t.options.tagAttrs {
-				return h, nil
+				return translateHint(h), nil
 			}
 			t.down(attrTagOpenState)
-			return parse.ObjectOpenHint, nil
+			return parse.EnterHint, nil
 		case scan.AttrValueKind:
-			if h == parse.ObjectCloseHint {
+			if h == xmlparse.ObjectCloseHint {
 				if !t.options.tagAttrs {
-					return h, nil
+					return translateHint(h), nil
 				}
 				t.state = attrTagCloseState
-				return parse.ObjectCloseHint, nil
-			} else if h == parse.ValueHint {
+				return parse.LeaveHint, nil
+			} else if h == xmlparse.ValueHint {
 				if !t.options.tagTexts {
-					return h, nil
+					return translateHint(h), nil
 				}
 				t.state = textTagOpenState
-				return parse.ObjectOpenHint, nil
+				return parse.EnterHint, nil
 			}
-			return h, nil
+			return translateHint(h), nil
 		case scan.CharKind:
-			if h != parse.ValueHint {
-				return h, nil
+			if h != xmlparse.ValueHint {
+				return translateHint(h), nil
 			}
 			if !t.options.tagTexts {
-				return h, nil
+				return translateHint(h), nil
 			}
 			t.state = textTagOpenState
-			return parse.ObjectOpenHint, nil
+			return parse.EnterHint, nil
 		}
 		panic("unreachable")
 	case elemTagOpenState:
 		t.state = elemTagKeyState
-		return parse.KeyHint, nil
+		return parse.FieldHint, nil
 	case elemTagKeyState:
 		t.state = startState
-		return parse.ObjectOpenHint, nil
+		return parse.EnterHint, nil
 	case elemTagCloseState:
 		t.up()
-		return parse.ObjectCloseHint, nil
+		return parse.LeaveHint, nil
 	case attrTagOpenState:
 		t.state = attrTagKeyState
-		return parse.KeyHint, nil
+		return parse.FieldHint, nil
 	case attrTagKeyState:
 		t.state = startState
-		return parse.ObjectOpenHint, nil
+		return parse.EnterHint, nil
 	case attrTagCloseState:
 		t.up()
-		return parse.ObjectCloseHint, nil
+		return parse.LeaveHint, nil
 	case textTagOpenState:
 		t.state = textTagKeyState
-		return parse.KeyHint, nil
+		return parse.FieldHint, nil
 	case textTagKeyState:
 		t.state = textTagCloseState
 		return parse.ValueHint, nil
 	case textTagCloseState:
 		t.state = startState
-		return parse.ObjectCloseHint, nil
+		return parse.LeaveHint, nil
 	case endState:
 		return parse.UnknownHint, io.EOF
 	}
