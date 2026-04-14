@@ -85,7 +85,7 @@ func TestPersonWalk(t *testing.T) {
 	// [{"Label":"Person","Children":[{"Label":"\n\t\t","Children":null},{"Label":"Name","Children":[{"Label":"Robert","Children":null}]},{"Label":"\n\t\t","Children":null},{"Label":"Addresses","Children":[{"Label":"\n\t\t\t\t","Children":null},{"Label":"Number","Children":[{"Label":"456","Children":null}]},{"Label":"\n\t\t\t\t","Children":null},{"Label":"Street","Children":[{"Label":"TheStreet","Children":null}]},{"Label":"\n\t\t","Children":null}]},{"Label":"\n\t\t","Children":null},{"Label":"Telephone","Children":[{"Label":"127897897","Children":null}]},{"Label":"\n\t\t","Children":null},{"Label":"XXX_unrecognized","Children":[]},{"Label":"\n\t","Children":null}]}]
 }
 
-func TestPersonManual(t *testing.T) {
+func TestPersonManualSkipAddresses(t *testing.T) {
 	personStr := `<Person>
 	<Name>Robert</Name>
 	<Addresses>
@@ -112,6 +112,77 @@ func TestPersonManual(t *testing.T) {
 	expect(t, x.String, "\n\t")
 	expectNoErr(t, x.Next)
 	expect(t, x.String, "Addresses")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n\t")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Telephone")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "0127897897")
+	expectEOF(t, x.Next)
+	x.Up()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n\t")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "XXX_unrecognized")
+	x.Down()
+	expectEOF(t, x.Next)
+	x.Up()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n")
+	expectEOF(t, x.Next)
+}
+
+func TestPersonManualDownAddresses(t *testing.T) {
+	personStr := `<Person>
+	<Name>Robert</Name>
+	<Addresses>
+		<Number>456</Number>
+		<Street>TheStreet</Street>
+	</Addresses>
+	<Telephone>0127897897</Telephone>
+	<XXX_unrecognized/>
+</Person>`
+	x := newParser(t, personStr)
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Person")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n\t")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Name")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Robert")
+	expectEOF(t, x.Next)
+	x.Up()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n\t")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Addresses")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n\t\t")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Number")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "456")
+	expectEOF(t, x.Next)
+	x.Up()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n\t\t")
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "Street")
+	x.Down()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "TheStreet")
+	expectEOF(t, x.Next)
+	x.Up()
+	expectNoErr(t, x.Next)
+	expect(t, x.String, "\n\t")
+	expectEOF(t, x.Next)
+	x.Up()
 	expectNoErr(t, x.Next)
 	expect(t, x.String, "\n\t")
 	expectNoErr(t, x.Next)
