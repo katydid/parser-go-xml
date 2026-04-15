@@ -32,7 +32,12 @@ type tagger struct {
 	stack []state
 }
 
-func NewTagger(p xmlparse.Parser, opts ...Option) parse.Parser {
+type Tagger interface {
+	parse.Parser
+	Init(buf []byte)
+}
+
+func NewTagger(p xmlparse.Parser, opts ...Option) Tagger {
 	options := newOptions(opts...)
 	return &tagger{
 		parser:  p,
@@ -40,6 +45,12 @@ func NewTagger(p xmlparse.Parser, opts ...Option) parse.Parser {
 		state:   startState,
 		stack:   make([]state, 0, 10),
 	}
+}
+
+func (t *tagger) Init(buf []byte) {
+	t.state = startState
+	t.parser.Init(buf)
+	t.stack = t.stack[:0]
 }
 
 func (t *tagger) Next() (parse.Hint, error) {

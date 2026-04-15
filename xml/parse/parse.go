@@ -43,6 +43,8 @@ type Parser interface {
 
 	// Internal: only for internal use
 	ScanKind() scan.Kind
+
+	Init(buf []byte)
 }
 
 type parser struct {
@@ -56,11 +58,16 @@ type parser struct {
 
 func NewParser(buf []byte) Parser {
 	p := &parser{
-		state:     startState,
-		stack:     make([]state, 0, 10),
-		tokenizer: token.NewTokenizer(buf),
+		stack: make([]state, 0, 10),
 	}
+	p.Init(buf)
 	return p
+}
+
+func (p *parser) Init(buf []byte) {
+	p.stack = p.stack[:0]
+	p.state = startState
+	p.tokenizer = token.NewTokenizer(buf)
 }
 
 func (p *parser) Next() (Hint, error) {
