@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package index
+package tag
 
 import (
-	xmlparse "github.com/katydid/parser-go-xml/xml/parse"
+	xmlparse "github.com/katydid/parser-go-xml/xml/parsarray"
 	"github.com/katydid/parser-go/parse"
 )
 

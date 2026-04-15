@@ -17,7 +17,7 @@ package index
 import (
 	"testing"
 
-	xmlparse "github.com/katydid/parser-go-xml/xml/parse"
+	xmlparse "github.com/katydid/parser-go-xml/xml/parsarray"
 	"github.com/katydid/parser-go/expect"
 	"github.com/katydid/parser-go/parse"
 )

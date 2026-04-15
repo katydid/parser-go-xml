@@ -12,46 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tag
+package index
 
 import (
 	"testing"
 
-	xmlparse "github.com/katydid/parser-go-xml/xml/parse"
+	xmlparse "github.com/katydid/parser-go-xml/xml/parsarray"
 	"github.com/katydid/parser-go/expect"
 	"github.com/katydid/parser-go/parse"
 )
 
-func TestTaggerPrefix(t *testing.T) {
-	str := `<a k1="v1" k2="v2">b</a>`
-	x := NewTagger(xmlparse.NewParser([]byte(str)), WithAttrPrefix("attr_"), WithElemPrefix("elem_"), WithTextPrefix("text_"))
+func TestSkipElementsAndAttributesAndChars(t *testing.T) {
+	astr := `<a k1="v1" k2="v2">b</a>`
+	// [{"a": [{"k1": "v1"}, {"k2": v2"}, "b"]}]
+	// [0: {"a": [0: {"k1": "v1"}, 1: {"k2": v2"}, 2: "b"]}]
+	x := WithIndexedArrays(xmlparse.NewParser([]byte(astr)))
 	expect.Hint(t, x, parse.EnterHint)
+	expect.Hint(t, x, parse.FieldHint)
+	expect.Int(t, x, 0)
 	expect.Hint(t, x, parse.EnterHint)
 
 	expect.Hint(t, x, parse.FieldHint)
-	expect.String(t, x, "elem_a")
+	expect.String(t, x, "a")
+
 	expect.Hint(t, x, parse.EnterHint)
 
+	expect.Hint(t, x, parse.FieldHint)
+	expect.Int(t, x, 0)
 	expect.Hint(t, x, parse.EnterHint)
 	expect.Hint(t, x, parse.FieldHint)
-	expect.String(t, x, "attr_k1")
+	expect.String(t, x, "k1")
 	expect.Hint(t, x, parse.ValueHint)
-	expect.String(t, x, "text_v1")
+	expect.String(t, x, "v1")
 	expect.Hint(t, x, parse.LeaveHint)
 
-	expect.Hint(t, x, parse.EnterHint)
 	expect.Hint(t, x, parse.FieldHint)
-	expect.String(t, x, "attr_k2")
+	expect.Int(t, x, 1)
+	expect.NoErr(t, x.Skip)
+	// {"k2": v2"}
+
+	expect.Hint(t, x, parse.FieldHint)
+	expect.Int(t, x, 2)
 	expect.Hint(t, x, parse.ValueHint)
-	expect.String(t, x, "text_v2")
-	expect.Hint(t, x, parse.LeaveHint)
-
-	expect.Hint(t, x, parse.ValueHint)
-	expect.String(t, x, "text_b")
+	expect.String(t, x, "b")
 
 	expect.Hint(t, x, parse.LeaveHint)
 
 	expect.Hint(t, x, parse.LeaveHint)
 
 	expect.Hint(t, x, parse.LeaveHint)
+	expect.EOF(t, x)
 }
