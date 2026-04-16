@@ -53,21 +53,25 @@ type parser struct {
 	stack []state
 
 	scanKind  scan.Kind
-	tokenizer token.Tokenizer
+	tokenizer token.TokenizerWithInit
 }
 
-func NewParser(buf []byte) Parser {
+func NewParser(opts ...Option) Parser {
+	options := newOptions(opts...)
 	p := &parser{
-		stack: make([]state, 0, 10),
+		stack:     make([]state, 0, 10),
+		tokenizer: token.NewTokenizer(options.toTokenOptions()...),
 	}
-	p.Init(buf)
+	if options.buf != nil {
+		p.Init(options.buf)
+	}
 	return p
 }
 
 func (p *parser) Init(buf []byte) {
 	p.stack = p.stack[:0]
 	p.state = startState
-	p.tokenizer = token.NewTokenizer(buf)
+	p.tokenizer.Init(buf)
 }
 
 func (p *parser) Next() (Hint, error) {

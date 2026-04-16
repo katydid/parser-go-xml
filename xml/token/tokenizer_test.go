@@ -30,7 +30,7 @@ func TestPersonManual(t *testing.T) {
 	<Weight>102.3</Weight>
 	<XXX_unrecognized/>
 </Person>`
-	x := NewTokenizer([]byte(personStr))
+	x := NewTokenizer(WithBuffer([]byte(personStr)))
 	expect(t, x.Next, scan.StartKind)
 	expectStr(t, x, "Person")
 	expect(t, x.Next, scan.CharKind)

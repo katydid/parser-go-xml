@@ -21,7 +21,7 @@ import (
 func TestElementsAndAttributesAndChars(t *testing.T) {
 	astr := `<a k1="v1" k2="v2">b</a>`
 	// [{"a": [{"k1": "v1"}, {"k2": v2"}, "b"]}]
-	x := NewParser([]byte(astr))
+	x := NewParser(WithBuffer([]byte(astr)))
 	expectHint(t, x, ArrayOpenHint)
 	expectHint(t, x, ObjectOpenHint)
 
@@ -59,7 +59,7 @@ func TestParseElementsAndCharsAndWhiteSpaceManual(t *testing.T) {
 	<B>C</B>
 </A>`
 	// [{"A": ["\n\t", {"B": ["C"]}, "\n"]}]
-	x := NewParser([]byte(elemStr))
+	x := NewParser(WithBuffer([]byte(elemStr)))
 	expectHint(t, x, ArrayOpenHint)
 	expectHint(t, x, ObjectOpenHint)
 
@@ -94,7 +94,7 @@ func TestParseElementsAndCharsAndWhiteSpaceManual(t *testing.T) {
 func TestParseEmpty(t *testing.T) {
 	str := ""
 	// `[]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectHint(t, p, ArrayCloseHint)
 	expectEOF(t, p)
@@ -103,7 +103,7 @@ func TestParseEmpty(t *testing.T) {
 func TestParseChar(t *testing.T) {
 	str := "a"
 	// `[a]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectHint(t, p, ValueHint)
 	expectString(t, p, "a")
@@ -114,7 +114,7 @@ func TestParseChar(t *testing.T) {
 func TestParseString(t *testing.T) {
 	str := "abc"
 	// `"abc"`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectHint(t, p, ValueHint)
 	expectString(t, p, "abc")
@@ -125,7 +125,7 @@ func TestParseString(t *testing.T) {
 func TestParseArray(t *testing.T) {
 	str := "<a/><b/>"
 	// `[a,b]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 
 	expectHint(t, p, ObjectOpenHint)
@@ -149,7 +149,7 @@ func TestParseArray(t *testing.T) {
 func TestParseArrayNestedOpen(t *testing.T) {
 	str := "<a><b/><c/></a>"
 	// `[{"a":[{"b":[]},{"c":[]}]}]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectHint(t, p, ObjectOpenHint)
 	expectHint(t, p, KeyHint)

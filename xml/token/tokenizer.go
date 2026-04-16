@@ -32,8 +32,13 @@ type Tokenizer interface {
 	Token() (parse.Kind, []byte, error)
 }
 
+type TokenizerWithInit interface {
+	Tokenizer
+	Init([]byte)
+}
+
 type tokenizer struct {
-	scanner scan.Scanner
+	scanner scan.ScannerWithInit
 	alloc   func(size int) []byte
 
 	scanToken []byte
@@ -47,14 +52,17 @@ type tokenizer struct {
 	tokenBytes  []byte
 }
 
-func NewTokenizer(buf []byte) Tokenizer {
-	alloc := func(size int) []byte {
-		return make([]byte, size)
-	}
+func NewTokenizer(opts ...Option) TokenizerWithInit {
+	options := newOptions(opts...)
 	return &tokenizer{
-		scanner: scan.NewScanner(buf),
-		alloc:   alloc,
+		scanner: scan.NewScanner(options.toScanOptions()...),
+		alloc:   options.alloc,
 	}
+}
+
+func (t *tokenizer) Init(buf []byte) {
+	t.scanner.Init(buf)
+	t.tokenized = false
 }
 
 // Next returns the Kind of the token or an error.

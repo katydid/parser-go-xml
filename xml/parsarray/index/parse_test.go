@@ -26,7 +26,7 @@ func TestElementsAndAttributesAndChars(t *testing.T) {
 	astr := `<a k1="v1" k2="v2">b</a>`
 	// [{"a": [{"k1": "v1"}, {"k2": v2"}, "b"]}]
 	// [0: {"a": [0: {"k1": "v1"}, 1: {"k2": v2"}, 2: "b"]}]
-	x := WithIndexedArrays(xmlparse.NewParser([]byte(astr)))
+	x := WithIndexedArrays(xmlparse.NewParser(xmlparse.WithBuffer([]byte(astr))))
 	expect.Hint(t, x, parse.EnterHint)
 	expect.Hint(t, x, parse.FieldHint)
 	expect.Int(t, x, 0)

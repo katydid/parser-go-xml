@@ -25,7 +25,7 @@ import (
 func TestTaggerWithElem(t *testing.T) {
 	// <a/> will parse as [{"elem": {"a": []}}]
 	str := `<a/>`
-	x := NewTagger(xmlparse.NewParser([]byte(str)), WithElemTag())
+	x := NewTagger(xmlparse.NewParser(xmlparse.WithBuffer([]byte(str))), WithElemTag())
 	expect.Hint(t, x, parse.EnterHint)
 
 	expect.Hint(t, x, parse.EnterHint)
@@ -48,7 +48,7 @@ func TestTaggerWithElem(t *testing.T) {
 func TestTaggerWithAttr(t *testing.T) {
 	// <a k="v"/> will parse as [{"a": [{"attr": {"k": "v"}}]}]
 	str := `<a k="v"/>`
-	x := NewTagger(xmlparse.NewParser([]byte(str)), WithAttrTag())
+	x := NewTagger(xmlparse.NewParser(xmlparse.WithBuffer([]byte(str))), WithAttrTag())
 	expect.Hint(t, x, parse.EnterHint)
 
 	expect.Hint(t, x, parse.EnterHint)
@@ -79,7 +79,7 @@ func TestTaggerWithAttr(t *testing.T) {
 func TestTaggerWithTextElem(t *testing.T) {
 	// <a>t</a> will parse as [{"a": [{"text": "t"}]}]
 	str := `<a>t</a>`
-	x := NewTagger(xmlparse.NewParser([]byte(str)), WithTextTag())
+	x := NewTagger(xmlparse.NewParser(xmlparse.WithBuffer([]byte(str))), WithTextTag())
 	expect.Hint(t, x, parse.EnterHint)
 
 	expect.Hint(t, x, parse.EnterHint)
@@ -104,7 +104,7 @@ func TestTaggerWithTextElem(t *testing.T) {
 func TestTaggerWithTextAttr(t *testing.T) {
 	// <a k="v"/> will parse as [{"a": [{"k": {"text": "v"}}]}]
 	str := `<a k="v"/>`
-	x := NewTagger(xmlparse.NewParser([]byte(str)), WithTextTag())
+	x := NewTagger(xmlparse.NewParser(xmlparse.WithBuffer([]byte(str))), WithTextTag())
 	expect.Hint(t, x, parse.EnterHint)
 
 	expect.Hint(t, x, parse.EnterHint)
@@ -135,7 +135,7 @@ func TestTaggerWithTextAttr(t *testing.T) {
 func TestTaggerWithAll(t *testing.T) {
 	str := `<a k="v">b</a>`
 	// [{"elem": {"a": [{"attr": {"k": {"text": "v"}}}, {"text": "b"}]}}]
-	x := NewTagger(xmlparse.NewParser([]byte(str)), WithAttrTag(), WithElemTag(), WithTextTag())
+	x := NewTagger(xmlparse.NewParser(xmlparse.WithBuffer([]byte(str))), WithAttrTag(), WithElemTag(), WithTextTag())
 	expect.Hint(t, x, parse.EnterHint)
 	expect.Hint(t, x, parse.EnterHint)
 	expect.Hint(t, x, parse.FieldHint)

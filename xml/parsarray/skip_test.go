@@ -21,7 +21,7 @@ import (
 func TestSkipEmpty(t *testing.T) {
 	str := ""
 	// `[]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectNoErr(t, p.Skip)
 	expectHint(t, p, ArrayCloseHint)
 	expectEOF(t, p)
@@ -30,7 +30,7 @@ func TestSkipEmpty(t *testing.T) {
 func TestSkipChar(t *testing.T) {
 	str := "a"
 	// `[a]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectNoErr(t, p.Skip)
 	expectHint(t, p, ValueHint)
 	expectString(t, p, "a")
@@ -41,7 +41,7 @@ func TestSkipChar(t *testing.T) {
 func TestSkipUnknownString(t *testing.T) {
 	str := "abc"
 	// `"abc"`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectNoErr(t, p.Skip)
 	expectEOF(t, p)
@@ -51,7 +51,7 @@ func TestSkipUnknownString(t *testing.T) {
 func TestSkipArrayOpen(t *testing.T) {
 	str := "<a/><b/>"
 	// `[a,b]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectNoErr(t, p.Skip)
 	// skipped over <a/>,<b/>]
@@ -61,7 +61,7 @@ func TestSkipArrayOpen(t *testing.T) {
 func TestSkipArrayNestedOpen(t *testing.T) {
 	str := "<a><b/><c/></a>"
 	// `[{"a":[{"b":[]},{"c":[]}]}]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectHint(t, p, ObjectOpenHint)
 	expectHint(t, p, KeyHint)
@@ -79,7 +79,7 @@ func TestSkipArrayNestedOpen(t *testing.T) {
 func TestSkipArrayElement(t *testing.T) {
 	str := `<a><b/><c/><d/></a>`
 	// `[{"a":[{"b":[]},{"c":[]},{"d":[]}]}]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectHint(t, p, ObjectOpenHint)
 	expectHint(t, p, KeyHint)
@@ -104,7 +104,7 @@ func TestSkipArrayElement(t *testing.T) {
 func TestSkipObjectOpen(t *testing.T) {
 	str := `<a><b/></a>`
 	// `[{"a":[{"b":[]}]}]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectHint(t, p, ObjectOpenHint)
 	expectNoErr(t, p.Skip)
@@ -116,7 +116,7 @@ func TestSkipObjectOpen(t *testing.T) {
 func TestSkipObjectNestedOpen(t *testing.T) {
 	str := `<a><b><c/></b></a>`
 	// `[{"a":[{"b":[{"c":[]}]}]}]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectHint(t, p, ObjectOpenHint)
 	expectHint(t, p, KeyHint)
@@ -135,7 +135,7 @@ func TestSkipObjectNestedOpen(t *testing.T) {
 func TestSkipObjectValueValue(t *testing.T) {
 	str := `<a><b>c</b>d</a>`
 	// `[{"a":[{"b":["c"]}, "d"]}]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectHint(t, p, ObjectOpenHint)
 	expectHint(t, p, KeyHint)
@@ -163,7 +163,7 @@ func TestSkipObjectValueValue(t *testing.T) {
 func TestSkipObjectValueObject(t *testing.T) {
 	str := `<a><b><c/></b>d</a>`
 	// `[{"a":[{"b":[{"c":[]}]}, "d"]}]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectHint(t, p, ObjectOpenHint)
 	expectHint(t, p, KeyHint)
@@ -190,7 +190,7 @@ func TestSkipObjectValueObject(t *testing.T) {
 func TestSkipObjectRecursiveValue(t *testing.T) {
 	str := `<a><b><c>f<u/>k</c></b>d</a>`
 	// `[{"a":[{"b":[{"c":[...]}]}, "d"]}]`
-	p := NewParser([]byte(str))
+	p := NewParser(WithBuffer([]byte(str)))
 	expectHint(t, p, ArrayOpenHint)
 	expectHint(t, p, ObjectOpenHint)
 	expectHint(t, p, KeyHint)

@@ -31,7 +31,7 @@ func expectScanKind(t *testing.T, p Parser, want scan.Kind) {
 func TestScanKind(t *testing.T) {
 	astr := `<a k1="v1" k2="v2">b</a>`
 	// [{"a": [{"k1": "v1"}, {"k2": v2"}, "b"]}]
-	x := NewParser([]byte(astr))
+	x := NewParser(WithBuffer([]byte(astr)))
 	expectHint(t, x, ArrayOpenHint)
 	expectHint(t, x, ObjectOpenHint)
 

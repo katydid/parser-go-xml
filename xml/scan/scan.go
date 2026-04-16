@@ -24,18 +24,33 @@ type Scanner interface {
 	Next() (Kind, string, error)
 }
 
+type ScannerWithInit interface {
+	Scanner
+	Init([]byte)
+}
+
 type scanner struct {
+	*options
 	d       *xml.Decoder
 	current xml.Token
 	attrs   *attrs
 }
 
-func NewScanner(buf []byte) Scanner {
+func NewScanner(opts ...Option) ScannerWithInit {
+	options := newOptions(opts...)
+	s := &scanner{options: options}
+	if options.buf != nil {
+		s.Init(options.buf)
+	}
+	return s
+}
+
+func (s *scanner) Init(buf []byte) {
 	buf = removeProcessingInstructions(buf)
 	buf = bytes.TrimSpace(buf)
 	dec := xml.NewDecoder(bytes.NewBuffer(buf))
 	dec.Strict = false
-	return &scanner{d: dec}
+	s.d = dec
 }
 
 func (s *scanner) Next() (Kind, string, error) {
@@ -60,6 +75,9 @@ func (s *scanner) Next() (Kind, string, error) {
 		s.reset()
 		return s.Next()
 	case xml.CharData:
+		if s.skipSpace && len(bytes.TrimSpace(t)) == 0 {
+			return s.Next()
+		}
 		s.reset()
 		return CharKind, string(t), nil
 	case xml.EndElement:

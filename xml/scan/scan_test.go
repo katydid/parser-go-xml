@@ -26,7 +26,7 @@ func TestPersonManual(t *testing.T) {
 	<Telephone>0127897897</Telephone>
 	<XXX_unrecognized/>
 </Person>`
-	x := NewScanner([]byte(personStr))
+	x := NewScanner(WithBuffer([]byte(personStr)))
 	expect(t, x.Next, StartKind, "Person")
 	expect(t, x.Next, CharKind, "\n\t")
 	expect(t, x.Next, StartKind, "Name")
@@ -58,7 +58,7 @@ func TestPersonManual(t *testing.T) {
 
 func TestAttrManual(t *testing.T) {
 	personStr := `<Person name="Robert"><Address number=456 street="TheStreet"/></Person>`
-	x := NewScanner([]byte(personStr))
+	x := NewScanner(WithBuffer([]byte(personStr)))
 	expect(t, x.Next, StartKind, "Person")
 	expect(t, x.Next, AttrKeyKind, "name")
 	expect(t, x.Next, AttrValueKind, "Robert")
