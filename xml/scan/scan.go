@@ -76,6 +76,7 @@ func (s *scanner) Next() (Kind, string, error) {
 		return s.Next()
 	case xml.CharData:
 		if s.skipSpace && len(bytes.TrimSpace(t)) == 0 {
+			s.reset()
 			return s.Next()
 		}
 		s.reset()

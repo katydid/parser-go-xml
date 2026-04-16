@@ -26,7 +26,7 @@ func expect[A, B comparable](t *testing.T, f func() (A, B, error), wanta A, want
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if gota != wanta {
-		t.Fatalf("want %#v, but got %#v", wanta, gota)
+		t.Fatalf("want %v, but got %v", wanta, gota)
 	}
 	if gotb != wantb {
 		t.Fatalf("want %#v, but got %#v", wantb, gotb)

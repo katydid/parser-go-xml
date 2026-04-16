@@ -22,3 +22,21 @@ const AttrKeyKind = Kind('k')
 const AttrValueKind = Kind('v')
 const CharKind = Kind('c')
 const EndKind = Kind('>')
+
+func (k Kind) String() string {
+	switch k {
+	case UnknownKind:
+		return "UnknownKind"
+	case StartKind:
+		return "StartKind"
+	case AttrKeyKind:
+		return "AttrKeyKind"
+	case AttrValueKind:
+		return "AttrValueKind"
+	case CharKind:
+		return "CharKind"
+	case EndKind:
+		return "EndKind"
+	}
+	panic("unreachable")
+}
