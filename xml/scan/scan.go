@@ -53,6 +53,41 @@ func (s *scanner) Init(buf []byte) {
 	s.d = dec
 }
 
+func (s *scanner) Peek() (Kind, error) {
+	if s.current == nil {
+		if err := s.next(); err != nil {
+			return UnknownKind, err
+		}
+	}
+	switch t := s.current.(type) {
+	case xml.StartElement:
+		if s.attrs == nil {
+			s.attrs = newAttrs(t.Attr)
+			return StartKind, nil
+		}
+		kind, err := s.attrs.Peak()
+		if err == nil {
+			return kind, nil
+		}
+		if err != io.EOF {
+			return UnknownKind, err
+		}
+		s.reset()
+		return s.Peek()
+	case xml.CharData:
+		if s.skipSpace && len(bytes.TrimSpace(t)) == 0 {
+			s.reset()
+			return s.Peek()
+		}
+		s.reset()
+		return CharKind, nil
+	case xml.EndElement:
+		s.reset()
+		return EndKind, nil
+	}
+	return UnknownKind, nil
+}
+
 func (s *scanner) Next() (Kind, string, error) {
 	if s.current == nil {
 		if err := s.next(); err != nil {

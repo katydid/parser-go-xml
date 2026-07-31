@@ -52,6 +52,20 @@ func (a *attrs) Next() (Kind, string, error) {
 	return AttrKeyKind, key, nil
 }
 
+func (a *attrs) Peak() (Kind, error) {
+	if a.index >= len(a.attrs) {
+		return UnknownKind, io.EOF
+	}
+	if a.atValue {
+		return AttrValueKind, nil
+	}
+	return AttrKeyKind, nil
+}
+
+func (a *attrs) hasNext() bool {
+	return a.index < len(a.attrs)
+}
+
 type attr struct {
 	key string
 	val string

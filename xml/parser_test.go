@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	xmlparse "github.com/katydid/parser-go-xml/xml/parse"
+	"github.com/katydid/parser-go/compat/downgrade"
 	"github.com/katydid/parser-go/parser/debug"
 )
 
@@ -36,11 +38,8 @@ func testXML(t *testing.T, s string) {
 
 func newParser(t *testing.T, s string) XMLParser {
 	t.Helper()
-	x := NewXMLParser()
-	if err := x.Init([]byte(s)); err != nil {
-		t.Fatal(err)
-	}
-	return x
+	x := xmlparse.NewParser(xmlparse.WithBuffer([]byte(s)), xmlparse.WithSkipSpace())
+	return downgrade.ParserWithInit(x)
 }
 
 func TestExample(t *testing.T) {
