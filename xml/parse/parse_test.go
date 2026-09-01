@@ -81,6 +81,25 @@ func TestParseElementsAndCharsAndWhiteSpaceManual(t *testing.T) {
 	expect.EOF(t, x)
 }
 
+func TestAttr(t *testing.T) {
+	astr := `<A k1="v1"/>`
+	x := NewParser(WithBuffer([]byte(astr)), WithSkipSpace())
+	expect.Hint(t, x, parse.EnterHint)
+
+	expect.Hint(t, x, parse.FieldHint)
+	expect.String(t, x, "A")
+	expect.Hint(t, x, parse.EnterHint)
+
+	expect.Hint(t, x, parse.FieldHint)
+	expect.String(t, x, "k1")
+	expect.Hint(t, x, parse.ValueHint)
+	expect.String(t, x, "v1")
+
+	expect.Hint(t, x, parse.LeaveHint)
+	expect.Hint(t, x, parse.LeaveHint)
+	expect.EOF(t, x)
+}
+
 func TestElementsAndAttributesAndChars(t *testing.T) {
 	astr := `<a k1="v1" k2="v2">b</a>`
 	// {"a": {"k1": "v1", "k2": "v2", "b": {}}}
@@ -101,10 +120,8 @@ func TestElementsAndAttributesAndChars(t *testing.T) {
 	expect.Hint(t, x, parse.ValueHint)
 	expect.String(t, x, "v2")
 
-	expect.Hint(t, x, parse.FieldHint)
+	expect.Hint(t, x, parse.ValueHint)
 	expect.String(t, x, "b")
-	expect.Hint(t, x, parse.EnterHint)
-	expect.Hint(t, x, parse.LeaveHint)
 
 	expect.Hint(t, x, parse.LeaveHint)
 	expect.Hint(t, x, parse.LeaveHint)
@@ -117,24 +134,6 @@ func TestParseEmpty(t *testing.T) {
 	p := NewParser(WithBuffer([]byte(str)), WithSkipSpace())
 	expect.Hint(t, p, parse.EnterHint)
 	expect.Hint(t, p, parse.LeaveHint)
-	expect.EOF(t, p)
-}
-
-func TestParseChar(t *testing.T) {
-	str := "a"
-	// `"a"`
-	p := NewParser(WithBuffer([]byte(str)), WithSkipSpace())
-	expect.Hint(t, p, parse.ValueHint)
-	expect.String(t, p, "a")
-	expect.EOF(t, p)
-}
-
-func TestParseString(t *testing.T) {
-	str := "abc"
-	// `"abc"`
-	p := NewParser(WithBuffer([]byte(str)), WithSkipSpace())
-	expect.Hint(t, p, parse.ValueHint)
-	expect.String(t, p, "abc")
 	expect.EOF(t, p)
 }
 

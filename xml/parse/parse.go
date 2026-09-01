@@ -67,6 +67,12 @@ func (p *parser) Next() (parse.Hint, error) {
 		return parse.EnterHint, nil
 	case inElemState:
 		scanKind, err := p.next()
+		if err == io.EOF {
+			if err := p.up(); err != nil {
+				return parse.UnknownHint, err
+			}
+			return parse.LeaveHint, nil
+		}
 		if err != nil {
 			return parse.UnknownHint, err
 		}
@@ -77,21 +83,26 @@ func (p *parser) Next() (parse.Hint, error) {
 			p.state = fieldState
 			return parse.FieldHint, nil
 		case scan.AttrKeyKind:
-			return parse.UnknownHint, errors.New("unexpected attr key")
+			p.state = attrKeyState
+			return parse.FieldHint, nil
 		case scan.AttrValueKind:
 			return parse.UnknownHint, errors.New("unexpected attr value")
 		case scan.CharKind:
 			return parse.ValueHint, nil
 		case scan.EndKind:
+			if err := p.up(); err != nil {
+				return parse.UnknownHint, err
+			}
 			return parse.LeaveHint, nil
 		}
+		panic("unreachable")
 	case fieldState:
 		nextKind1, nextKind2, err := p.look2()
 		if err == nil && nextKind1 == scan.CharKind && nextKind2 == scan.EndKind {
 			// This is a leaf/value so going to the next token is the appropriate action.
+			p.next()
 			p.state = inElemState
 			p.down(leafState)
-			p.next()
 			return parse.ValueHint, nil
 		}
 		// This is not an element with another element or multiple values, so we need to enter it.
@@ -99,20 +110,33 @@ func (p *parser) Next() (parse.Hint, error) {
 		p.down(inElemState)
 		return parse.EnterHint, nil
 	case leafState:
-		if err := p.up(); err != nil {
-			return parse.UnknownHint, err
-		}
-		return p.Next()
-	case attrState:
 		scanKind, err := p.next()
 		if err != nil {
 			return parse.UnknownHint, err
 		}
-		switch scanKind {
-		case scan.AttrValueKind:
-			return parse.ValueHint, p.up()
+		if scanKind != scan.EndKind {
+			return parse.UnknownHint, errors.New("expected attr value")
 		}
-		return parse.UnknownHint, errUknown
+		if err := p.up(); err != nil {
+			return parse.UnknownHint, err
+		}
+		return p.Next()
+	case attrKeyState:
+		scanKind, err := p.next()
+		if err != nil {
+			return parse.UnknownHint, err
+		}
+		if scanKind != scan.AttrValueKind {
+			return parse.UnknownHint, errors.New("expected attr value")
+		}
+		p.state = inElemState
+		p.down(attrValState)
+		return parse.ValueHint, nil
+	case attrValState:
+		if err := p.up(); err != nil {
+			return parse.UnknownHint, err
+		}
+		return p.Next()
 	case endState:
 		return parse.UnknownHint, io.EOF
 	}
@@ -132,9 +156,12 @@ func (p *parser) next() (scan.Kind, error) {
 	if p.peekKind != scan.UnknownKind || p.peekErr != nil {
 		k, err := p.peekKind, p.peekErr
 		p.peekKind, p.peekErr = scan.UnknownKind, nil
+		fmt.Printf("next (peeked) = %v, %v\n", k, err)
 		return k, err
 	}
-	return p.tokenizer.Next()
+	k, err := p.tokenizer.Next()
+	fmt.Printf("next = %v, %v\n", k, err)
+	return k, err
 }
 
 // look2 returns the next two scan kinds

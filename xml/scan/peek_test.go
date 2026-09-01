@@ -134,7 +134,7 @@ func TestPersonPeekManual(t *testing.T) {
 	expectEOF(t, x.Next)
 }
 
-func TestAttrPeekManual(t *testing.T) {
+func TestAttrsPeekManual(t *testing.T) {
 	personStr := `<Person name="Robert"><Address number=456 street="TheStreet"/></Person>`
 	x := NewScanner(WithBuffer([]byte(personStr)))
 	expectPeek(t, x.Peek, StartKind)

@@ -24,7 +24,9 @@ const fieldState = state('F')
 
 const leafState = state('l')
 
-const attrState = state('A')
+const attrKeyState = state('k')
+
+const attrValState = state('v')
 
 const endState = state('$')
 
@@ -38,8 +40,10 @@ func (s state) String() string {
 		return "fieldState"
 	case leafState:
 		return "leafState"
-	case attrState:
-		return "attrState"
+	case attrKeyState:
+		return "attrKeyState"
+	case attrValState:
+		return "attrValState"
 	case endState:
 		return "endState"
 	}
