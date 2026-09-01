@@ -18,7 +18,11 @@ type state byte
 
 const startState = state(0)
 
-const openState = state('O')
+const inElemState = state('{')
+
+const fieldState = state('F')
+
+const leafState = state('l')
 
 const attrState = state('A')
 
@@ -28,8 +32,12 @@ func (s state) String() string {
 	switch s {
 	case startState:
 		return "startState"
-	case openState:
-		return "openState"
+	case inElemState:
+		return "inElemState"
+	case fieldState:
+		return "fieldState"
+	case leafState:
+		return "leafState"
 	case attrState:
 		return "attrState"
 	case endState:

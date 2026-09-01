@@ -28,6 +28,7 @@ import (
 type Tokenizer interface {
 	// Next returns the Kind of the token or an error.
 	Next() (scan.Kind, error)
+	Peek() (scan.Kind, error)
 	// Token parses and returns the current token.
 	Token() (parse.Kind, []byte, error)
 }
@@ -75,6 +76,10 @@ func (t *tokenizer) Next() (scan.Kind, error) {
 	t.scanKind = kind
 	t.scanToken = []byte(token)
 	return kind, nil
+}
+
+func (t *tokenizer) Peek() (scan.Kind, error) {
+	return t.scanner.Peek()
 }
 
 func (t *tokenizer) Token() (parse.Kind, []byte, error) {

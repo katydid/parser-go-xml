@@ -15,6 +15,7 @@
 package parse
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
@@ -34,7 +35,8 @@ type parser struct {
 	state state
 	stack []state
 
-	scanKind  scan.Kind
+	peekKind  scan.Kind
+	peekErr   error
 	tokenizer token.TokenizerWithInit
 }
 
@@ -60,7 +62,11 @@ func (p *parser) Next() (parse.Hint, error) {
 	fmt.Printf("Next %v %d\n", p.state, len(p.stack))
 	switch p.state {
 	case startState:
-		scanKind, err := p.tokenizer.Next()
+		p.state = endState
+		p.down(inElemState)
+		return parse.EnterHint, nil
+	case inElemState:
+		scanKind, err := p.next()
 		if err != nil {
 			return parse.UnknownHint, err
 		}
@@ -68,23 +74,37 @@ func (p *parser) Next() (parse.Hint, error) {
 		case scan.UnknownKind:
 			return parse.UnknownHint, errUknown
 		case scan.StartKind:
-			p.down(openState)
-			return parse.EnterHint, nil
-		case scan.AttrKeyKind:
-			p.down(attrState)
+			p.state = fieldState
 			return parse.FieldHint, nil
+		case scan.AttrKeyKind:
+			return parse.UnknownHint, errors.New("unexpected attr key")
 		case scan.AttrValueKind:
-			return parse.ValueHint, p.up()
+			return parse.UnknownHint, errors.New("unexpected attr value")
 		case scan.CharKind:
 			return parse.ValueHint, nil
 		case scan.EndKind:
-			return parse.LeaveHint, p.up()
+			return parse.LeaveHint, nil
 		}
-	case openState:
-		p.down(startState)
-		return parse.FieldHint, nil
+	case fieldState:
+		nextKind1, nextKind2, err := p.look2()
+		if err == nil && nextKind1 == scan.CharKind && nextKind2 == scan.EndKind {
+			// This is a leaf/value so going to the next token is the appropriate action.
+			p.state = inElemState
+			p.down(leafState)
+			p.next()
+			return parse.ValueHint, nil
+		}
+		// This is not an element with another element or multiple values, so we need to enter it.
+		p.state = inElemState
+		p.down(inElemState)
+		return parse.EnterHint, nil
+	case leafState:
+		if err := p.up(); err != nil {
+			return parse.UnknownHint, err
+		}
+		return p.Next()
 	case attrState:
-		scanKind, err := p.tokenizer.Next()
+		scanKind, err := p.next()
 		if err != nil {
 			return parse.UnknownHint, err
 		}
@@ -101,15 +121,32 @@ func (p *parser) Next() (parse.Hint, error) {
 
 func (p *parser) Skip() error {
 	panic("not implemented")
-	switch p.state {
-	case startState:
-
-	}
-	return nil
 }
 
 func (p *parser) Token() (parse.Kind, []byte, error) {
 	return p.tokenizer.Token()
+}
+
+// next returns the next scan kind and takes peek into account.
+func (p *parser) next() (scan.Kind, error) {
+	if p.peekKind != scan.UnknownKind || p.peekErr != nil {
+		k, err := p.peekKind, p.peekErr
+		p.peekKind, p.peekErr = scan.UnknownKind, nil
+		return k, err
+	}
+	return p.tokenizer.Next()
+}
+
+// look2 returns the next two scan kinds
+func (p *parser) look2() (scan.Kind, scan.Kind, error) {
+	if p.peekKind == scan.UnknownKind && p.peekErr == nil {
+		p.peekKind, p.peekErr = p.tokenizer.Next()
+		if p.peekErr != nil {
+			return scan.UnknownKind, scan.UnknownKind, nil
+		}
+	}
+	peekKind2, peekErr2 := p.tokenizer.Peek()
+	return p.peekKind, peekKind2, peekErr2
 }
 
 func (p *parser) down(state state) {

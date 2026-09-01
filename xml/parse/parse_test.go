@@ -21,6 +21,66 @@ import (
 	"github.com/katydid/parser-go/parse"
 )
 
+func TestParseElementManual(t *testing.T) {
+	elemStr := `<A>B</A>`
+	// {"A": "B"}
+	x := NewParser(WithBuffer([]byte(elemStr)))
+	expect.Hint(t, x, parse.EnterHint)
+
+	expect.Hint(t, x, parse.FieldHint)
+	expect.String(t, x, "A")
+
+	expect.Hint(t, x, parse.ValueHint)
+	expect.String(t, x, "B")
+
+	expect.Hint(t, x, parse.LeaveHint)
+	expect.EOF(t, x)
+}
+
+func TestParseElementsManual(t *testing.T) {
+	elemStr := `<A><B>C</B></A>`
+	// {"A": {"B": "C"}}
+	x := NewParser(WithBuffer([]byte(elemStr)))
+	expect.Hint(t, x, parse.EnterHint)
+
+	expect.Hint(t, x, parse.FieldHint)
+	expect.String(t, x, "A")
+	expect.Hint(t, x, parse.EnterHint)
+
+	expect.Hint(t, x, parse.FieldHint)
+	expect.String(t, x, "B")
+
+	expect.Hint(t, x, parse.ValueHint)
+	expect.String(t, x, "C")
+
+	expect.Hint(t, x, parse.LeaveHint)
+	expect.Hint(t, x, parse.LeaveHint)
+	expect.EOF(t, x)
+}
+
+func TestParseElementsAndCharsAndWhiteSpaceManual(t *testing.T) {
+	elemStr := `<A>
+	<B>C</B>
+</A>`
+	// {"A": {"B": "C"}}
+	x := NewParser(WithBuffer([]byte(elemStr)), WithSkipSpace())
+	expect.Hint(t, x, parse.EnterHint)
+
+	expect.Hint(t, x, parse.FieldHint)
+	expect.String(t, x, "A")
+	expect.Hint(t, x, parse.EnterHint)
+
+	expect.Hint(t, x, parse.FieldHint)
+	expect.String(t, x, "B")
+
+	expect.Hint(t, x, parse.ValueHint)
+	expect.String(t, x, "C")
+
+	expect.Hint(t, x, parse.LeaveHint)
+	expect.Hint(t, x, parse.LeaveHint)
+	expect.EOF(t, x)
+}
+
 func TestElementsAndAttributesAndChars(t *testing.T) {
 	astr := `<a k1="v1" k2="v2">b</a>`
 	// {"a": {"k1": "v1", "k2": "v2", "b": {}}}
@@ -45,29 +105,6 @@ func TestElementsAndAttributesAndChars(t *testing.T) {
 	expect.String(t, x, "b")
 	expect.Hint(t, x, parse.EnterHint)
 	expect.Hint(t, x, parse.LeaveHint)
-
-	expect.Hint(t, x, parse.LeaveHint)
-	expect.Hint(t, x, parse.LeaveHint)
-	expect.EOF(t, x)
-}
-
-func TestParseElementsAndCharsAndWhiteSpaceManual(t *testing.T) {
-	elemStr := `<A>
-	<B>C</B>
-</A>`
-	// {"A": {"B": "C"}}
-	x := NewParser(WithBuffer([]byte(elemStr)), WithSkipSpace())
-	expect.Hint(t, x, parse.EnterHint)
-
-	expect.Hint(t, x, parse.FieldHint)
-	expect.String(t, x, "A")
-	expect.Hint(t, x, parse.EnterHint)
-
-	expect.Hint(t, x, parse.FieldHint)
-	expect.String(t, x, "B")
-
-	expect.Hint(t, x, parse.ValueHint)
-	expect.String(t, x, "C")
 
 	expect.Hint(t, x, parse.LeaveHint)
 	expect.Hint(t, x, parse.LeaveHint)
