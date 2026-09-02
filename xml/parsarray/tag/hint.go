@@ -16,7 +16,7 @@ package tag
 
 import (
 	xmlparse "github.com/katydid/parser-go-xml/xml/parsarray"
-	"github.com/katydid/parser-go/parse"
+	"katydid.org.za/go/parser-go/parse"
 )
 
 func translateHint(h xmlparse.Hint) parse.Hint {

@@ -18,8 +18,8 @@ import (
 	"testing"
 
 	xmlparse "github.com/katydid/parser-go-xml/xml/parsarray"
-	"github.com/katydid/parser-go/expect"
-	"github.com/katydid/parser-go/parse"
+	"katydid.org.za/go/parser-go/expect"
+	"katydid.org.za/go/parser-go/parse"
 )
 
 func TestSkipElementsAndAttributesAndChars(t *testing.T) {

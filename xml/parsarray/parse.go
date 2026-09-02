@@ -20,7 +20,7 @@ import (
 
 	"github.com/katydid/parser-go-xml/xml/scan"
 	"github.com/katydid/parser-go-xml/xml/token"
-	"github.com/katydid/parser-go/parse"
+	"katydid.org.za/go/parser-go/parse"
 )
 
 type Parser interface {

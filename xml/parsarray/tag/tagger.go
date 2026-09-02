@@ -20,7 +20,7 @@ import (
 
 	xmlparse "github.com/katydid/parser-go-xml/xml/parsarray"
 	"github.com/katydid/parser-go-xml/xml/scan"
-	"github.com/katydid/parser-go/parse"
+	"katydid.org.za/go/parser-go/parse"
 )
 
 type tagger struct {

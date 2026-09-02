@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/katydid/parser-go/parser"
+	"katydid.org.za/go/parser-go/parser"
 )
 
 type xmlParser struct {

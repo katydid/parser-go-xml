@@ -19,8 +19,8 @@ import (
 	"testing"
 
 	xmlparse "github.com/katydid/parser-go-xml/xml/parse"
-	"github.com/katydid/parser-go/compat/downgrade"
-	"github.com/katydid/parser-go/parser/debug"
+	"katydid.org.za/go/parser-go/compat/downgrade"
+	"katydid.org.za/go/parser-go/parser/debug"
 )
 
 func testXML(t *testing.T, s string) {

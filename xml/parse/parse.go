@@ -21,7 +21,7 @@ import (
 
 	"github.com/katydid/parser-go-xml/xml/scan"
 	"github.com/katydid/parser-go-xml/xml/token"
-	"github.com/katydid/parser-go/parse"
+	"katydid.org.za/go/parser-go/parse"
 )
 
 type Parser interface {
@@ -144,7 +144,57 @@ func (p *parser) Next() (parse.Hint, error) {
 }
 
 func (p *parser) Skip() error {
-	panic("not implemented")
+	switch p.state {
+	case startState:
+		p.state = endState
+		return nil
+	case inElemState:
+		// <A>... call until </A> is parsed
+		// <A><B>C</B>... call until </A> is parsed
+		// <A b="c" .. call until </A> is parsed
+		currentStackSize := len(p.stack)
+		fmt.Printf("skipping inElemState from %d\n", currentStackSize)
+		for len(p.stack) >= currentStackSize {
+			_, err := p.Next()
+			if err != nil {
+				return err
+			}
+		}
+		fmt.Printf("skipped\n")
+		return nil
+	case fieldState:
+		// go down into the field
+		currentStackSize := len(p.stack)
+		fmt.Printf("skipping fieldState from %d\n", currentStackSize)
+		_, err := p.Next()
+		if err != nil {
+			return err
+		}
+		// and then get back to the same level as the original field.
+		for len(p.stack) > currentStackSize {
+			_, err := p.Next()
+			if err != nil {
+				return err
+			}
+		}
+		fmt.Printf("skipped\n")
+		return nil
+	case leafState:
+		fmt.Printf("skipping leafState\n")
+		_, err := p.Next()
+		return err
+	case attrKeyState:
+		fmt.Printf("skipping attrKeyState\n")
+		_, err := p.Next()
+		return err
+	case attrValState:
+		fmt.Printf("skipping attrValState\n")
+		_, err := p.Next()
+		return err
+	case endState:
+		return nil
+	}
+	panic("unreachable")
 }
 
 func (p *parser) Token() (parse.Kind, []byte, error) {
