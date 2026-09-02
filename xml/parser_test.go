@@ -19,14 +19,15 @@ import (
 	"testing"
 
 	xmlparse "github.com/katydid/parser-go-xml/xml/parse"
-	"katydid.org.za/go/parser-go/compat/downgrade"
-	"katydid.org.za/go/parser-go/parser/debug"
+	"katydid.org.za/go/parser-go/expect"
+	"katydid.org.za/go/parser-go/hedge"
+	"katydid.org.za/go/parser-go/parse"
+	"katydid.org.za/go/parser-go/parse/log"
 )
 
 func testXML(t *testing.T, s string) {
 	x := xmlparse.NewParser(xmlparse.WithBuffer([]byte(s)), xmlparse.WithSkipSpace())
-	p := downgrade.ParserWithInit(x)
-	m, err := debug.Parse(debug.NewLogger(p, debug.NewLineLogger()))
+	m, err := hedge.ParseInto(log.WrapParserWithInit(x))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,12 +36,6 @@ func testXML(t *testing.T, s string) {
 		t.Fatal(err)
 	}
 	t.Log(string(data))
-}
-
-func newParser(t *testing.T, s string) XMLParser {
-	t.Helper()
-	x := xmlparse.NewParser(xmlparse.WithBuffer([]byte(s)))
-	return downgrade.ParserWithInit(x)
 }
 
 func TestExample(t *testing.T) {
@@ -85,6 +80,10 @@ func TestPersonWalk(t *testing.T) {
 	// [{"Label":"Person","Children":[{"Label":"\n\t\t","Children":null},{"Label":"Name","Children":[{"Label":"Robert","Children":null}]},{"Label":"\n\t\t","Children":null},{"Label":"Addresses","Children":[{"Label":"\n\t\t\t\t","Children":null},{"Label":"Number","Children":[{"Label":"456","Children":null}]},{"Label":"\n\t\t\t\t","Children":null},{"Label":"Street","Children":[{"Label":"TheStreet","Children":null}]},{"Label":"\n\t\t","Children":null}]},{"Label":"\n\t\t","Children":null},{"Label":"Telephone","Children":[{"Label":"127897897","Children":null}]},{"Label":"\n\t\t","Children":null},{"Label":"XXX_unrecognized","Children":[]},{"Label":"\n\t","Children":null}]}]
 }
 
+func newParser(s string) xmlparse.Parser {
+	return xmlparse.NewParser(xmlparse.WithBuffer([]byte(s)))
+}
+
 func TestPersonManualSkipAddresses(t *testing.T) {
 	personStr := `<Person>
 	<Name>Robert</Name>
@@ -95,42 +94,49 @@ func TestPersonManualSkipAddresses(t *testing.T) {
 	<Telephone>0127897897</Telephone>
 	<XXX_unrecognized/>
 </Person>`
-	x := newParser(t, personStr)
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Person")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n\t")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Name")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Robert")
-	expectEOF(t, x.Next)
-	x.Up()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n\t")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Addresses")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n\t")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Telephone")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "0127897897")
-	expectEOF(t, x.Next)
-	x.Up()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n\t")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "XXX_unrecognized")
-	x.Down()
-	expectEOF(t, x.Next)
-	x.Up()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n")
-	expectEOF(t, x.Next)
+	p := newParser(personStr)
+	expect.Hint(t, p, parse.EnterHint)
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Person")
+	expect.Hint(t, p, parse.EnterHint)
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n\t")
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Name")
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "Robert")
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n\t")
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Addresses")
+	expect.NoErr(t, p.Skip)
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n\t")
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Telephone")
+	expect.Hint(t, p, parse.ValueHint)
+	expect.Int(t, p, 127897897)
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n\t")
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "XXX_unrecognized")
+	expect.Hint(t, p, parse.EnterHint)
+	expect.Hint(t, p, parse.LeaveHint)
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n")
+
+	expect.Hint(t, p, parse.LeaveHint)
+	expect.Hint(t, p, parse.LeaveHint)
+	expect.EOF(t, p)
 }
 
 func TestPersonManualDownAddresses(t *testing.T) {
@@ -143,88 +149,103 @@ func TestPersonManualDownAddresses(t *testing.T) {
 	<Telephone>0127897897</Telephone>
 	<XXX_unrecognized/>
 </Person>`
-	x := newParser(t, personStr)
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Person")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n\t")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Name")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Robert")
-	expectEOF(t, x.Next)
-	x.Up()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n\t")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Addresses")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n\t\t")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Number")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "456")
-	expectEOF(t, x.Next)
-	x.Up()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n\t\t")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Street")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "TheStreet")
-	expectEOF(t, x.Next)
-	x.Up()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n\t")
-	expectEOF(t, x.Next)
-	x.Up()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n\t")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Telephone")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "0127897897")
-	expectEOF(t, x.Next)
-	x.Up()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n\t")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "XXX_unrecognized")
-	x.Down()
-	expectEOF(t, x.Next)
-	x.Up()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "\n")
-	expectEOF(t, x.Next)
+	p := newParser(personStr)
+	expect.Hint(t, p, parse.EnterHint)
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Person")
+	expect.Hint(t, p, parse.EnterHint)
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n\t")
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Name")
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "Robert")
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n\t")
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Addresses")
+	expect.Hint(t, p, parse.EnterHint)
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n\t\t")
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Number")
+	expect.Hint(t, p, parse.ValueHint)
+	expect.Int(t, p, 456)
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n\t\t")
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Street")
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "TheStreet")
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n\t")
+
+	expect.Hint(t, p, parse.LeaveHint)
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n\t")
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Telephone")
+	expect.Hint(t, p, parse.ValueHint)
+	expect.Int(t, p, 127897897)
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n\t")
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "XXX_unrecognized")
+	expect.Hint(t, p, parse.EnterHint)
+	expect.Hint(t, p, parse.LeaveHint)
+
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "\n")
+
+	expect.Hint(t, p, parse.LeaveHint)
+	expect.Hint(t, p, parse.LeaveHint)
+	expect.EOF(t, p)
 }
 
 func TestAttrManual(t *testing.T) {
 	personStr := `<Person name="Robert"><Address number=456 street="TheStreet"/></Person>`
-	x := newParser(t, personStr)
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Person")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "name")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "Address")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "number")
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "street")
-	x.Down()
-	expectNoErr(t, x.Next)
-	expect(t, x.String, "TheStreet")
-	expectEOF(t, x.Next)
-	x.Up()
-	expectEOF(t, x.Next)
-	x.Up()
-	expectEOF(t, x.Next)
+	p := newParser(personStr)
+	expect.Hint(t, p, parse.EnterHint)
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Person")
+	expect.Hint(t, p, parse.EnterHint)
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "name")
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "Robert")
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "Address")
+	expect.Hint(t, p, parse.EnterHint)
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "number")
+	expect.Hint(t, p, parse.ValueHint)
+	expect.Int(t, p, 456)
+
+	expect.Hint(t, p, parse.FieldHint)
+	expect.String(t, p, "street")
+	expect.Hint(t, p, parse.ValueHint)
+	expect.String(t, p, "TheStreet")
+
+	expect.Hint(t, p, parse.LeaveHint)
+
+	expect.Hint(t, p, parse.LeaveHint)
+	expect.Hint(t, p, parse.LeaveHint)
+	expect.EOF(t, p)
 }
