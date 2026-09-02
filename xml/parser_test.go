@@ -24,8 +24,9 @@ import (
 )
 
 func testXML(t *testing.T, s string) {
-	x := newParser(t, s)
-	m, err := debug.Parse(debug.NewLogger(x, debug.NewLineLogger()))
+	x := xmlparse.NewParser(xmlparse.WithBuffer([]byte(s)), xmlparse.WithSkipSpace())
+	p := downgrade.ParserWithInit(x)
+	m, err := debug.Parse(debug.NewLogger(p, debug.NewLineLogger()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +39,7 @@ func testXML(t *testing.T, s string) {
 
 func newParser(t *testing.T, s string) XMLParser {
 	t.Helper()
-	x := xmlparse.NewParser(xmlparse.WithBuffer([]byte(s)), xmlparse.WithSkipSpace())
+	x := xmlparse.NewParser(xmlparse.WithBuffer([]byte(s)))
 	return downgrade.ParserWithInit(x)
 }
 

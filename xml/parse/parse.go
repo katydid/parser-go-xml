@@ -151,7 +151,6 @@ func (p *parser) Skip() error {
 	case inElemState:
 		// <A>... call until </A> is parsed
 		// <A><B>C</B>... call until </A> is parsed
-		// <A b="c" .. call until </A> is parsed
 		currentStackSize := len(p.stack)
 		fmt.Printf("skipping inElemState from %d\n", currentStackSize)
 		for len(p.stack) >= currentStackSize {
@@ -170,8 +169,24 @@ func (p *parser) Skip() error {
 		if err != nil {
 			return err
 		}
-		// and then get back to the same level as the original field.
-		for len(p.stack) > currentStackSize {
+		switch p.state {
+		case leafState:
+		case inElemState:
+			return p.Skip()
+		default:
+			panic("unreachable")
+		}
+		fmt.Printf("skipped\n")
+		return nil
+	case leafState:
+		fmt.Printf("skipping leafState\n")
+		_, err := p.Next()
+		if err != nil {
+			return err
+		}
+		currentStackSize := len(p.stack)
+		fmt.Printf("skipping leafState from %d\n", currentStackSize)
+		for len(p.stack) >= currentStackSize {
 			_, err := p.Next()
 			if err != nil {
 				return err
@@ -179,18 +194,27 @@ func (p *parser) Skip() error {
 		}
 		fmt.Printf("skipped\n")
 		return nil
-	case leafState:
-		fmt.Printf("skipping leafState\n")
-		_, err := p.Next()
-		return err
 	case attrKeyState:
 		fmt.Printf("skipping attrKeyState\n")
 		_, err := p.Next()
 		return err
 	case attrValState:
+		// <A b="c" .. call until </A> is parsed
 		fmt.Printf("skipping attrValState\n")
 		_, err := p.Next()
-		return err
+		if err != nil {
+			return err
+		}
+		currentStackSize := len(p.stack)
+		fmt.Printf("skipping attrValState from %d\n", currentStackSize)
+		for len(p.stack) >= currentStackSize {
+			_, err := p.Next()
+			if err != nil {
+				return err
+			}
+		}
+		fmt.Printf("skipped\n")
+		return nil
 	case endState:
 		return nil
 	}
