@@ -16,7 +16,6 @@ package parse
 
 import (
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/katydid/parser-go-xml/xml/scan"
@@ -59,7 +58,6 @@ func (p *parser) Init(buf []byte) {
 }
 
 func (p *parser) Next() (parse.Hint, error) {
-	fmt.Printf("Next %v %d\n", p.state, len(p.stack))
 	switch p.state {
 	case startState:
 		p.state = endState
@@ -152,19 +150,15 @@ func (p *parser) Skip() error {
 		// <A>... call until </A> is parsed
 		// <A><B>C</B>... call until </A> is parsed
 		currentStackSize := len(p.stack)
-		fmt.Printf("skipping inElemState from %d\n", currentStackSize)
 		for len(p.stack) >= currentStackSize {
 			_, err := p.Next()
 			if err != nil {
 				return err
 			}
 		}
-		fmt.Printf("skipped\n")
 		return nil
 	case fieldState:
 		// go down into the field
-		currentStackSize := len(p.stack)
-		fmt.Printf("skipping fieldState from %d\n", currentStackSize)
 		_, err := p.Next()
 		if err != nil {
 			return err
@@ -176,44 +170,36 @@ func (p *parser) Skip() error {
 		default:
 			panic("unreachable")
 		}
-		fmt.Printf("skipped\n")
 		return nil
 	case leafState:
-		fmt.Printf("skipping leafState\n")
 		_, err := p.Next()
 		if err != nil {
 			return err
 		}
 		currentStackSize := len(p.stack)
-		fmt.Printf("skipping leafState from %d\n", currentStackSize)
 		for len(p.stack) >= currentStackSize {
 			_, err := p.Next()
 			if err != nil {
 				return err
 			}
 		}
-		fmt.Printf("skipped\n")
 		return nil
 	case attrKeyState:
-		fmt.Printf("skipping attrKeyState\n")
 		_, err := p.Next()
 		return err
 	case attrValState:
 		// <A b="c" .. call until </A> is parsed
-		fmt.Printf("skipping attrValState\n")
 		_, err := p.Next()
 		if err != nil {
 			return err
 		}
 		currentStackSize := len(p.stack)
-		fmt.Printf("skipping attrValState from %d\n", currentStackSize)
 		for len(p.stack) >= currentStackSize {
 			_, err := p.Next()
 			if err != nil {
 				return err
 			}
 		}
-		fmt.Printf("skipped\n")
 		return nil
 	case endState:
 		return nil
@@ -230,11 +216,9 @@ func (p *parser) next() (scan.Kind, error) {
 	if p.peekKind != scan.UnknownKind || p.peekErr != nil {
 		k, err := p.peekKind, p.peekErr
 		p.peekKind, p.peekErr = scan.UnknownKind, nil
-		fmt.Printf("next (peeked) = %v, %v\n", k, err)
 		return k, err
 	}
 	k, err := p.tokenizer.Next()
-	fmt.Printf("next = %v, %v\n", k, err)
 	return k, err
 }
 
@@ -251,7 +235,6 @@ func (p *parser) look2() (scan.Kind, scan.Kind, error) {
 }
 
 func (p *parser) down(state state) {
-	fmt.Printf("down\n")
 	// Append the current state to the stack.
 	p.stack = append(p.stack, p.state)
 	// Create a new state.
@@ -259,7 +242,6 @@ func (p *parser) down(state state) {
 }
 
 func (p *parser) up() error {
-	fmt.Printf("up\n")
 	if len(p.stack) == 0 {
 		return errUnexpectedClose
 	}
