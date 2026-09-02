@@ -26,7 +26,8 @@ import (
 )
 
 func testXML(t *testing.T, s string) {
-	x := xmlparse.NewParser(xmlparse.WithBuffer([]byte(s)), xmlparse.WithSkipSpace())
+	x := NewParser()
+	x.Init([]byte(s))
 	m, err := hedge.ParseInto(log.WrapParserWithInit(x))
 	if err != nil {
 		t.Fatal(err)
@@ -81,7 +82,9 @@ func TestPersonWalk(t *testing.T) {
 }
 
 func newParser(s string) xmlparse.Parser {
-	return xmlparse.NewParser(xmlparse.WithBuffer([]byte(s)))
+	x := NewRAWParser()
+	x.Init([]byte(s))
+	return x
 }
 
 func TestPersonManualSkipAddresses(t *testing.T) {
