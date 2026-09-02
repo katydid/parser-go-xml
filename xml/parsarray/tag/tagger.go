@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"io"
 
-	xmlparse "github.com/katydid/parser-go-xml/xml/parsarray"
-	"github.com/katydid/parser-go-xml/xml/scan"
+	xmlparse "katydid.org.za/go/parser-go-xml/xml/parsarray"
+	"katydid.org.za/go/parser-go-xml/xml/scan"
 	"katydid.org.za/go/parser-go/parse"
 )
 

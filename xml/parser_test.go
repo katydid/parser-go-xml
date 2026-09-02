@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	xmlparse "github.com/katydid/parser-go-xml/xml/parse"
+	xmlparse "katydid.org.za/go/parser-go-xml/xml/parse"
 	"katydid.org.za/go/parser-go/expect"
 	"katydid.org.za/go/parser-go/hedge"
 	"katydid.org.za/go/parser-go/parse"

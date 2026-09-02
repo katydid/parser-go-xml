@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/katydid/parser-go-xml/xml/scan"
+	"katydid.org.za/go/parser-go-xml/xml/scan"
 	"katydid.org.za/go/parser-go/cast"
 	"katydid.org.za/go/parser-go/parse"
 )

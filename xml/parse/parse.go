@@ -18,8 +18,8 @@ import (
 	"errors"
 	"io"
 
-	"github.com/katydid/parser-go-xml/xml/scan"
-	"github.com/katydid/parser-go-xml/xml/token"
+	"katydid.org.za/go/parser-go-xml/xml/scan"
+	"katydid.org.za/go/parser-go-xml/xml/token"
 	"katydid.org.za/go/parser-go/parse"
 )
 

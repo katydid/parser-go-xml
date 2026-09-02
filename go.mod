@@ -1,4 +1,4 @@
-module github.com/katydid/parser-go-xml
+module katydid.org.za/go/parser-go-xml
 
 go 1.26.3
 

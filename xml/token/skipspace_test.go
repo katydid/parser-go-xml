@@ -17,7 +17,7 @@ package token
 import (
 	"testing"
 
-	"github.com/katydid/parser-go-xml/xml/scan"
+	"katydid.org.za/go/parser-go-xml/xml/scan"
 )
 
 func TestPersonSkipSpace(t *testing.T) {
