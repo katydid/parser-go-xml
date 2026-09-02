@@ -40,3 +40,22 @@ func expectEOF[A, B any](t *testing.T, f func() (A, B, error)) {
 		t.Fatalf("expected EOF, but got err = %v", err)
 	}
 }
+
+func expectPeek[A comparable](t *testing.T, f func() (A, error), want A) {
+	t.Helper()
+	got, err := f()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != want {
+		t.Fatalf("want %v, but got %v", want, got)
+	}
+}
+
+func expectPeekEOF[A comparable](t *testing.T, f func() (A, error)) {
+	t.Helper()
+	_, err := f()
+	if err != io.EOF {
+		t.Fatalf("expected EOF, but got err = %v", err)
+	}
+}

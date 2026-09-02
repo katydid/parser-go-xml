@@ -56,7 +56,7 @@ func TestPersonManual(t *testing.T) {
 	expectEOF(t, x.Next)
 }
 
-func TestAttrManual(t *testing.T) {
+func TestAttrsManual(t *testing.T) {
 	personStr := `<Person name="Robert"><Address number=456 street="TheStreet"/></Person>`
 	x := NewScanner(WithBuffer([]byte(personStr)))
 	expect(t, x.Next, StartKind, "Person")
@@ -69,5 +69,26 @@ func TestAttrManual(t *testing.T) {
 	expect(t, x.Next, AttrValueKind, "TheStreet")
 	expect(t, x.Next, EndKind, "Address")
 	expect(t, x.Next, EndKind, "Person")
+	expectEOF(t, x.Next)
+}
+
+func TestAttrManual(t *testing.T) {
+	str := `<A B="C"/>`
+	x := NewScanner(WithBuffer([]byte(str)))
+	expect(t, x.Next, StartKind, "A")
+	expect(t, x.Next, AttrKeyKind, "B")
+	expect(t, x.Next, AttrValueKind, "C")
+	expect(t, x.Next, EndKind, "A")
+	expectEOF(t, x.Next)
+}
+
+func TestElemManual(t *testing.T) {
+	str := `<A><B>C</B></A>`
+	x := NewScanner(WithBuffer([]byte(str)))
+	expect(t, x.Next, StartKind, "A")
+	expect(t, x.Next, StartKind, "B")
+	expect(t, x.Next, CharKind, "C")
+	expect(t, x.Next, EndKind, "B")
+	expect(t, x.Next, EndKind, "A")
 	expectEOF(t, x.Next)
 }

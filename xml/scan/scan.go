@@ -22,6 +22,7 @@ import (
 
 type Scanner interface {
 	Next() (Kind, string, error)
+	Peek() (Kind, error)
 }
 
 type ScannerWithInit interface {
@@ -31,9 +32,11 @@ type ScannerWithInit interface {
 
 type scanner struct {
 	*options
-	d       *xml.Decoder
+	dec     *xml.Decoder
 	current xml.Token
 	attrs   *attrs
+	peek    xml.Token
+	peekerr error
 }
 
 func NewScanner(opts ...Option) ScannerWithInit {
@@ -48,14 +51,15 @@ func NewScanner(opts ...Option) ScannerWithInit {
 func (s *scanner) Init(buf []byte) {
 	buf = removeProcessingInstructions(buf)
 	buf = bytes.TrimSpace(buf)
-	dec := xml.NewDecoder(bytes.NewBuffer(buf))
-	dec.Strict = false
-	s.d = dec
+	s.dec = xml.NewDecoder(bytes.NewBuffer(buf))
+	s.dec.Strict = false
 }
 
 func (s *scanner) Next() (Kind, string, error) {
 	if s.current == nil {
-		if err := s.next(); err != nil {
+		var err error
+		s.current, err = s.token()
+		if err != nil {
 			return UnknownKind, "", err
 		}
 	}
@@ -75,10 +79,6 @@ func (s *scanner) Next() (Kind, string, error) {
 		s.reset()
 		return s.Next()
 	case xml.CharData:
-		if s.skipSpace && len(bytes.TrimSpace(t)) == 0 {
-			s.reset()
-			return s.Next()
-		}
 		s.reset()
 		return CharKind, string(t), nil
 	case xml.EndElement:
@@ -93,31 +93,61 @@ func (s *scanner) reset() {
 	s.attrs = nil
 }
 
-// next only returns a StartElement, non empty CharData or an EndElement
-func (s *scanner) next() error {
-	tok, err := s.d.Token()
-	for {
-		if err != nil {
-			s.current = tok
-			return err
-		}
-		switch t := tok.(type) {
-		case xml.StartElement:
-			s.current = tok
-			return nil
-		case xml.CharData:
-			if hasContent(t) {
-				s.current = tok
-				return nil
+func (s *scanner) Peek() (Kind, error) {
+	if s.peek == nil && s.peekerr == nil {
+		if s.current != nil {
+			if s.attrs != nil {
+				k, err := s.attrs.Peek()
+				if err == nil {
+					return k, nil
+				}
 			}
-		case xml.EndElement:
-			s.current = tok
-			return nil
+			s.current = xml.CopyToken(s.current)
 		}
-		tok, err = s.d.Token()
+		s.peek, s.peekerr = s.token()
 	}
+	if s.peekerr != nil {
+		return UnknownKind, s.peekerr
+	}
+	switch s.peek.(type) {
+	case xml.StartElement:
+		return StartKind, nil
+	case xml.CharData:
+		return CharKind, nil
+	case xml.EndElement:
+		return EndKind, nil
+	}
+	return UnknownKind, nil
 }
 
-func hasContent(c xml.CharData) bool {
-	return len(string(c)) > 0
+// token returns the next token and takes into account the tokens that were peeked.
+// It only sets s.current to a StartElement, non empty CharData or an EndElement.
+// It does not look at Attributes.
+func (s *scanner) token() (xml.Token, error) {
+	if s.peek != nil || s.peekerr != nil {
+		tok := s.peek
+		err := s.peekerr
+		s.peek = nil
+		s.peekerr = nil
+		return tok, err
+	}
+	tok, err := s.nextToken()
+	return tok, err
+}
+
+// nextToken asks the decoder to decode the next token.
+func (s *scanner) nextToken() (xml.Token, error) {
+	tok, err := s.dec.Token()
+	if err != nil {
+		return nil, err
+	}
+	if c, ok := tok.(xml.CharData); ok {
+		if len(string(c)) == 0 {
+			return s.nextToken()
+		}
+		if s.skipSpace && len(bytes.TrimSpace(c)) == 0 {
+			return s.nextToken()
+		}
+	}
+	return tok, nil
 }

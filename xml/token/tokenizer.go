@@ -16,18 +16,20 @@ package token
 
 import (
 	"errors"
+	"math"
 	"strconv"
 	"strings"
 
-	"github.com/katydid/parser-go-xml/xml/scan"
-	"github.com/katydid/parser-go/cast"
-	"github.com/katydid/parser-go/parse"
+	"katydid.org.za/go/parser-go-xml/xml/scan"
+	"katydid.org.za/go/parser-go/cast"
+	"katydid.org.za/go/parser-go/parse"
 )
 
 // Tokenizer is a scanner that provides the ability to buffers returned by the scanner into native Go types.
 type Tokenizer interface {
 	// Next returns the Kind of the token or an error.
 	Next() (scan.Kind, error)
+	Peek() (scan.Kind, error)
 	// Token parses and returns the current token.
 	Token() (parse.Kind, []byte, error)
 }
@@ -44,12 +46,12 @@ type tokenizer struct {
 	scanToken []byte
 	scanKind  scan.Kind
 
-	tokenized   bool
-	tokenKind   parse.Kind
-	tokenErr    error
-	tokenDouble float64
-	tokenInt    int64
-	tokenBytes  []byte
+	tokenized       bool
+	tokenKind       parse.Kind
+	tokenErr        error
+	tokenDoubleBits uint64
+	tokenInt        int64
+	tokenBytes      []byte
 }
 
 func NewTokenizer(opts ...Option) TokenizerWithInit {
@@ -77,15 +79,19 @@ func (t *tokenizer) Next() (scan.Kind, error) {
 	return kind, nil
 }
 
+func (t *tokenizer) Peek() (scan.Kind, error) {
+	return t.scanner.Peek()
+}
+
 func (t *tokenizer) Token() (parse.Kind, []byte, error) {
 	if err := t.tokenize(); err != nil {
 		return parse.UnknownKind, nil, err
 	}
 	if t.tokenKind == parse.Int64Kind {
-		return t.tokenKind, cast.FromInt64(t.tokenInt, t.alloc), nil
+		return t.tokenKind, cast.FromInt64Ptr(&t.tokenInt, t.alloc), nil
 	}
 	if t.tokenKind == parse.Float64Kind {
-		return t.tokenKind, cast.FromFloat64(t.tokenDouble, t.alloc), nil
+		return t.tokenKind, cast.FromFloat64BitsPtr(&t.tokenDoubleBits, t.alloc), nil
 	}
 	return t.tokenKind, t.tokenBytes, nil
 }
@@ -128,7 +134,7 @@ func (t *tokenizer) tokenize() error {
 		f, err := strconv.ParseFloat(string(t.scanToken), 64)
 		if err == nil {
 			t.tokenKind = parse.Float64Kind
-			t.tokenDouble = f
+			t.tokenDoubleBits = math.Float64bits(f)
 			t.tokenized = true
 			return nil
 		}
@@ -159,7 +165,7 @@ func (t *tokenizer) Int() (int64, error) {
 
 func (t *tokenizer) Double() (float64, error) {
 	if t.tokenKind == parse.Float64Kind {
-		return t.tokenDouble, nil
+		return math.Float64frombits(t.tokenDoubleBits), nil
 	}
 	return 0, ErrNotDouble
 }

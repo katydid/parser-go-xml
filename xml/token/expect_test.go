@@ -19,8 +19,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/katydid/parser-go/cast"
-	"github.com/katydid/parser-go/parse"
+	"katydid.org.za/go/parser-go/cp"
+	"katydid.org.za/go/parser-go/parse"
 )
 
 func expect[A comparable](t *testing.T, f func() (A, error), want A) {
@@ -65,7 +65,7 @@ func expectInt(t *testing.T, tzer Tokenizer, want int64) {
 	if tokenKind != parse.Int64Kind {
 		t.Fatalf("expected int64, but got %v", tokenKind)
 	}
-	got := cast.ToInt64(gotb)
+	got := cp.ToInt64(gotb)
 	if got != want {
 		t.Fatalf("want %v, but got %v", want, got)
 	}
@@ -80,7 +80,7 @@ func expectFloat(t *testing.T, tzer Tokenizer, want float64) {
 	if tokenKind != parse.Float64Kind {
 		t.Fatalf("expected float64, but got %v", tokenKind)
 	}
-	got := cast.ToFloat64(gotb)
+	got := cp.ToFloat64(gotb)
 	if got != want {
 		t.Fatalf("want %v, but got %v", want, got)
 	}

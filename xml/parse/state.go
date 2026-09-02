@@ -12,25 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package index
+package parse
 
-import (
-	xmlparse "katydid.org.za/go/parser-go-xml/xml/parsarray"
-	"katydid.org.za/go/parser-go/parse"
-)
+type state byte
 
-func translateHint(h xmlparse.Hint) parse.Hint {
-	switch h {
-	case xmlparse.UnknownHint:
-		return parse.UnknownHint
-	case xmlparse.ObjectOpenHint, xmlparse.ArrayOpenHint:
-		return parse.EnterHint
-	case xmlparse.ObjectCloseHint, xmlparse.ArrayCloseHint:
-		return parse.LeaveHint
-	case xmlparse.KeyHint:
-		return parse.FieldHint
-	case xmlparse.ValueHint:
-		return parse.ValueHint
+const startState = state(0)
+
+const inElemState = state('{')
+
+const fieldState = state('F')
+
+const leafState = state('l')
+
+const attrKeyState = state('k')
+
+const attrValState = state('v')
+
+const endState = state('$')
+
+func (s state) String() string {
+	switch s {
+	case startState:
+		return "startState"
+	case inElemState:
+		return "inElemState"
+	case fieldState:
+		return "fieldState"
+	case leafState:
+		return "leafState"
+	case attrKeyState:
+		return "attrKeyState"
+	case attrValState:
+		return "attrValState"
+	case endState:
+		return "endState"
 	}
 	panic("unreachable")
 }

@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"io"
 
-	xmlparse "github.com/katydid/parser-go-xml/xml/parsarray"
-	"github.com/katydid/parser-go/cast"
-	"github.com/katydid/parser-go/parse"
+	xmlparse "katydid.org.za/go/parser-go-xml/xml/parsarray"
+	"katydid.org.za/go/parser-go/cast"
+	"katydid.org.za/go/parser-go/parse"
 )
 
 type Parser interface {
@@ -149,7 +149,7 @@ func alloc(size int) []byte { return make([]byte, size) }
 
 func (p *parser) Token() (parse.Kind, []byte, error) {
 	if p.state.kind == arrayElemState {
-		return parse.Int64Kind, cast.FromInt64(p.state.index, alloc), nil
+		return parse.Int64Kind, cast.FromInt64Ptr(&p.state.index, alloc), nil
 	}
 	return p.parser.Token()
 }
