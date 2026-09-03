@@ -34,7 +34,7 @@ jobs:
       uses: awalterschulze/checklicense@v1.0.6
       with:
         path: .
-        ignores: doc.go .svg .txt
+        ignores: doc.go .svg .txt .drawio
     - name: Diff
       run: |
         cd gopath/katydid.org.za/go/parser-go-xml
