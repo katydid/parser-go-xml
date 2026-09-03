@@ -20,13 +20,13 @@ const startState = state(0)
 
 const inElemState = state('{')
 
-const fieldState = state('F')
+const atFieldState = state('F')
 
-const leafState = state('l')
+const isLeafState = state('l')
 
-const attrKeyState = state('k')
+const atAttributeKeyState = state('k')
 
-const attrValState = state('v')
+const atAttributeValueState = state('v')
 
 const endState = state('$')
 
@@ -36,14 +36,14 @@ func (s state) String() string {
 		return "startState"
 	case inElemState:
 		return "inElemState"
-	case fieldState:
-		return "fieldState"
-	case leafState:
-		return "leafState"
-	case attrKeyState:
-		return "attrKeyState"
-	case attrValState:
-		return "attrValState"
+	case atFieldState:
+		return "atFieldState"
+	case isLeafState:
+		return "isLeafState"
+	case atAttributeKeyState:
+		return "atAttributeKeyState"
+	case atAttributeValueState:
+		return "atAttributeValueState"
 	case endState:
 		return "endState"
 	}

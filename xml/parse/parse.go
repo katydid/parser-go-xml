@@ -30,7 +30,6 @@ type Parser interface {
 }
 
 type parser struct {
-	// state
 	state state
 	stack []state
 
@@ -78,10 +77,10 @@ func (p *parser) Next() (parse.Hint, error) {
 		case scan.UnknownKind:
 			return parse.UnknownHint, errUknown
 		case scan.StartKind:
-			p.state = fieldState
+			p.state = atFieldState
 			return parse.FieldHint, nil
 		case scan.AttrKeyKind:
-			p.state = attrKeyState
+			p.state = atAttributeKeyState
 			return parse.FieldHint, nil
 		case scan.AttrValueKind:
 			return parse.UnknownHint, errors.New("unexpected attr value")
@@ -94,20 +93,20 @@ func (p *parser) Next() (parse.Hint, error) {
 			return parse.LeaveHint, nil
 		}
 		panic("unreachable")
-	case fieldState:
+	case atFieldState:
 		nextKind1, nextKind2, err := p.look2()
 		if err == nil && nextKind1 == scan.CharKind && nextKind2 == scan.EndKind {
 			// This is a leaf/value so going to the next token is the appropriate action.
 			p.next()
 			p.state = inElemState
-			p.down(leafState)
+			p.down(isLeafState)
 			return parse.ValueHint, nil
 		}
 		// This is not an element with another element or multiple values, so we need to enter it.
 		p.state = inElemState
 		p.down(inElemState)
 		return parse.EnterHint, nil
-	case leafState:
+	case isLeafState:
 		scanKind, err := p.next()
 		if err != nil {
 			return parse.UnknownHint, err
@@ -119,7 +118,7 @@ func (p *parser) Next() (parse.Hint, error) {
 			return parse.UnknownHint, err
 		}
 		return p.Next()
-	case attrKeyState:
+	case atAttributeKeyState:
 		scanKind, err := p.next()
 		if err != nil {
 			return parse.UnknownHint, err
@@ -128,9 +127,9 @@ func (p *parser) Next() (parse.Hint, error) {
 			return parse.UnknownHint, errors.New("expected attr value")
 		}
 		p.state = inElemState
-		p.down(attrValState)
+		p.down(atAttributeValueState)
 		return parse.ValueHint, nil
-	case attrValState:
+	case atAttributeValueState:
 		if err := p.up(); err != nil {
 			return parse.UnknownHint, err
 		}
@@ -157,21 +156,21 @@ func (p *parser) Skip() error {
 			}
 		}
 		return nil
-	case fieldState:
+	case atFieldState:
 		// go down into the field
 		_, err := p.Next()
 		if err != nil {
 			return err
 		}
 		switch p.state {
-		case leafState:
+		case isLeafState:
 		case inElemState:
 			return p.Skip()
 		default:
 			panic("unreachable")
 		}
 		return nil
-	case leafState:
+	case isLeafState:
 		_, err := p.Next()
 		if err != nil {
 			return err
@@ -184,10 +183,10 @@ func (p *parser) Skip() error {
 			}
 		}
 		return nil
-	case attrKeyState:
+	case atAttributeKeyState:
 		_, err := p.Next()
 		return err
-	case attrValState:
+	case atAttributeValueState:
 		// <A b="c" .. call until </A> is parsed
 		_, err := p.Next()
 		if err != nil {
