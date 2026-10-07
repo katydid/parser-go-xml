@@ -4,14 +4,14 @@ Parser for XML in Go
 
 ```go
 import (
-    "katydid.org.za/go/parser-go/cast"
+	"katydid.org.za/go/parser-go/cast"
 	"katydid.org.za/go/parser-go/cp"
-    "katydid.org.za/go/parser-go-xml/xml"
-    "katydid.org.za/go/parser-go-xml/xml/parse"
+	"katydid.org.za/go/parser-go-xml/xml"
+	"katydid.org.za/go/parser-go-xml/xml/parse"
 )
 
 func main() {
-    xmlstr := `
+	xmlstr := `
 		<Top>
 			<Name>Katydid</Name>
 			<Dragons alive="false">
