@@ -23,8 +23,8 @@ import (
 	"katydid.org.za/go/parser-go/cp"
 	"katydid.org.za/go/parser-go/expect"
 	"katydid.org.za/go/parser-go/hedge"
+	"katydid.org.za/go/parser-go/log"
 	"katydid.org.za/go/parser-go/parse"
-	"katydid.org.za/go/parser-go/parse/log"
 )
 
 func testXML(t *testing.T, s string) {
