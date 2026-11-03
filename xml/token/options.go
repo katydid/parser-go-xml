@@ -14,7 +14,7 @@
 
 package token
 
-import "katydid.org.za/go/parser-go-xml/xml/scan"
+import "go.katydid.org.za/parser-go-xml/xml/scan"
 
 type options struct {
 	buf       []byte

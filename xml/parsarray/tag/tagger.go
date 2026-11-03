@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"io"
 
-	xmlparse "katydid.org.za/go/parser-go-xml/xml/parsarray"
-	"katydid.org.za/go/parser-go-xml/xml/scan"
-	"katydid.org.za/go/parser-go/parse"
+	xmlparse "go.katydid.org.za/parser-go-xml/xml/parsarray"
+	"go.katydid.org.za/parser-go-xml/xml/scan"
+	"go.katydid.org.za/parser-go/parse"
 )
 
 type tagger struct {

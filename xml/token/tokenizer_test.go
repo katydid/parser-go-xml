@@ -17,7 +17,7 @@ package token
 import (
 	"testing"
 
-	"katydid.org.za/go/parser-go-xml/xml/scan"
+	"go.katydid.org.za/parser-go-xml/xml/scan"
 )
 
 func TestPersonManual(t *testing.T) {

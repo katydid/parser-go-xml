@@ -15,7 +15,7 @@
 package parse
 
 import (
-	"katydid.org.za/go/parser-go-xml/xml/token"
+	"go.katydid.org.za/parser-go-xml/xml/token"
 )
 
 type options struct {

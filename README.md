@@ -4,10 +4,10 @@ Parser for XML in Go
 
 ```go
 import (
-	"katydid.org.za/go/parser-go/cast"
-	"katydid.org.za/go/parser-go/cp"
-	"katydid.org.za/go/parser-go-xml/xml"
-	"katydid.org.za/go/parser-go-xml/xml/parse"
+	"go.katydid.org.za/parser-go/cast"
+	"go.katydid.org.za/parser-go/cp"
+	"go.katydid.org.za/parser-go-xml/xml"
+	"go.katydid.org.za/parser-go-xml/xml/parse"
 )
 
 func main() {

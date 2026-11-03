@@ -17,7 +17,7 @@ package parse
 import (
 	"testing"
 
-	"katydid.org.za/go/parser-go-xml/xml/scan"
+	"go.katydid.org.za/parser-go-xml/xml/scan"
 )
 
 func expectScanKind(t *testing.T, p Parser, want scan.Kind) {

@@ -18,13 +18,13 @@ import (
 	"encoding/json"
 	"testing"
 
-	xmlparse "katydid.org.za/go/parser-go-xml/xml/parse"
-	"katydid.org.za/go/parser-go/cast"
-	"katydid.org.za/go/parser-go/cp"
-	"katydid.org.za/go/parser-go/expect"
-	"katydid.org.za/go/parser-go/hedge"
-	"katydid.org.za/go/parser-go/log"
-	"katydid.org.za/go/parser-go/parse"
+	xmlparse "go.katydid.org.za/parser-go-xml/xml/parse"
+	"go.katydid.org.za/parser-go/cast"
+	"go.katydid.org.za/parser-go/cp"
+	"go.katydid.org.za/parser-go/expect"
+	"go.katydid.org.za/parser-go/hedge"
+	"go.katydid.org.za/parser-go/log"
+	"go.katydid.org.za/parser-go/parse"
 )
 
 func testXML(t *testing.T, s string) {

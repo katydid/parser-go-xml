@@ -15,9 +15,9 @@
 package xml
 
 import (
-	"katydid.org.za/go/parser-go-xml/xml/parse"
-	goparse "katydid.org.za/go/parser-go/parse"
-	"katydid.org.za/go/parser-go/pool"
+	"go.katydid.org.za/parser-go-xml/xml/parse"
+	goparse "go.katydid.org.za/parser-go/parse"
+	"go.katydid.org.za/parser-go/pool"
 )
 
 type Parser interface {

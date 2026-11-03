@@ -1,5 +1,5 @@
-module katydid.org.za/go/parser-go-xml
+module go.katydid.org.za/parser-go-xml
 
 go 1.26.3
 
-require katydid.org.za/go/parser-go v0.12.0
+require go.katydid.org.za/parser-go v0.13.0

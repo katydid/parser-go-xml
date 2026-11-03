@@ -15,7 +15,7 @@
 package index
 
 import (
-	xmlparse "katydid.org.za/go/parser-go-xml/xml/parsarray"
+	xmlparse "go.katydid.org.za/parser-go-xml/xml/parsarray"
 )
 
 type state struct {

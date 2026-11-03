@@ -18,9 +18,9 @@ import (
 	"errors"
 	"io"
 
-	"katydid.org.za/go/parser-go-xml/xml/scan"
-	"katydid.org.za/go/parser-go-xml/xml/token"
-	"katydid.org.za/go/parser-go/parse"
+	"go.katydid.org.za/parser-go-xml/xml/scan"
+	"go.katydid.org.za/parser-go-xml/xml/token"
+	"go.katydid.org.za/parser-go/parse"
 )
 
 type Parser interface {

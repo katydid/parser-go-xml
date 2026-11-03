@@ -17,9 +17,9 @@ package tag
 import (
 	"testing"
 
-	xmlparse "katydid.org.za/go/parser-go-xml/xml/parsarray"
-	"katydid.org.za/go/parser-go/expect"
-	"katydid.org.za/go/parser-go/parse"
+	xmlparse "go.katydid.org.za/parser-go-xml/xml/parsarray"
+	"go.katydid.org.za/parser-go/expect"
+	"go.katydid.org.za/parser-go/parse"
 )
 
 func TestTaggerWithElem(t *testing.T) {
